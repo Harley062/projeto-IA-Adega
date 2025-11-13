@@ -1,0 +1,45 @@
+# Configuração do Sistema de Análise de Dados - Adega
+
+# Diretórios
+directories:
+  data: "."
+  output: "output"
+  models: "output/models"
+  plots: "output/plots"
+  reports: "output/reports"
+  logs: "logs"
+
+# Arquivos de Dados
+data_files:
+  clientes: "Cliente.csv"
+  produtos: "produtos.csv"
+  compras: "Compras.csv"
+
+# Parâmetros de Machine Learning
+ml_params:
+  test_size: 0.2
+  random_state: 42
+  cv_folds: 5
+
+# Feature Engineering
+feature_engineering:
+  temporal_features: true
+  aggregated_features: true
+  interaction_features: true
+
+# Normalização
+preprocessing:
+  scaler_method: "standard"  # 'standard' ou 'minmax'
+  handle_missing: "drop"  # 'drop', 'mean', 'median'
+
+# Seleção de Features
+feature_selection:
+  n_features: 20
+  method: "f_classif"  # 'f_classif' ou 'mutual_info'
+
+# Visualizações
+visualization:
+  dpi: 300
+  figure_width: 12
+  figure_height: 6
+  style: "whitegrid"

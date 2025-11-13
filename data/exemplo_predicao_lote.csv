@@ -1,0 +1,11 @@
+cliente_id,nome,idade,cidade,pontuacao_engajamento,assinante_clube,valor,quantidade,pais,tipo_uva
+101,Maria Santos,28,São Paulo,8.5,Sim,320.00,3,França,Merlot
+102,João Silva,45,Rio de Janeiro,3.2,Não,125.00,1,Chile,Cabernet Sauvignon
+103,Ana Costa,52,Belo Horizonte,9.1,Sim,450.00,4,Itália,Pinot Noir
+104,Pedro Oliveira,33,Brasília,4.5,Não,180.00,2,Argentina,Malbec
+105,Carla Lima,61,Salvador,2.8,Sim,95.00,1,Brasil,Chardonnay
+106,Roberto Alves,39,Curitiba,7.3,Sim,265.00,3,Espanha,Tempranillo
+107,Fernanda Rocha,48,Fortaleza,5.9,Não,210.00,2,Portugal,Syrah
+108,Lucas Martins,26,Goiânia,6.7,Sim,175.00,2,França,Sauvignon Blanc
+109,Paula Ferreira,54,São Paulo,3.9,Sim,340.00,4,Chile,Merlot
+110,Ricardo Santos,42,Rio de Janeiro,8.2,Não,290.00,3,Itália,Cabernet Sauvignon

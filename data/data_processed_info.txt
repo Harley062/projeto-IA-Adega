@@ -1,0 +1,67 @@
+================================================================================
+INFORMAÇÕES DA BASE DE DADOS TRATADA
+================================================================================
+
+Total de Registros: 21
+Total de Features: 40
+
+================================================================================
+LISTA DE FEATURES
+================================================================================
+
+ 1. compra_id                      | Tipo: int64      | Nulos:     0 | Únicos:    21
+ 2. cliente_id                     | Tipo: int64      | Nulos:     0 | Únicos:    21
+ 3. produto_id                     | Tipo: int64      | Nulos:     0 | Únicos:    20
+ 4. valor                          | Tipo: float64    | Nulos:     0 | Únicos:    21
+ 5. quantidade                     | Tipo: int64      | Nulos:     0 | Únicos:     5
+ 6. nome                           | Tipo: int64      | Nulos:     0 | Únicos:    21
+ 7. idade                          | Tipo: float64    | Nulos:     0 | Únicos:    18
+ 8. cidade                         | Tipo: int64      | Nulos:     0 | Únicos:     8
+ 9. pontuacao_engajamento          | Tipo: float64    | Nulos:     0 | Únicos:    21
+10. assinante_clube                | Tipo: int64      | Nulos:     0 | Únicos:     2
+11. nome_produto                   | Tipo: int64      | Nulos:     0 | Únicos:    20
+12. pais                           | Tipo: int64      | Nulos:     0 | Únicos:     7
+13. safra                          | Tipo: float64    | Nulos:     0 | Únicos:     7
+14. tipo_uva                       | Tipo: int64      | Nulos:     0 | Únicos:     8
+15. ano                            | Tipo: int32      | Nulos:     0 | Únicos:     1
+16. mes                            | Tipo: int32      | Nulos:     0 | Únicos:    11
+17. dia                            | Tipo: int32      | Nulos:     0 | Únicos:    14
+18. dia_semana                     | Tipo: int32      | Nulos:     0 | Únicos:     7
+19. trimestre                      | Tipo: int32      | Nulos:     0 | Únicos:     4
+20. semana_ano                     | Tipo: UInt32     | Nulos:     0 | Únicos:    19
+21. mes_sin                        | Tipo: float64    | Nulos:     0 | Únicos:    10
+22. mes_cos                        | Tipo: float64    | Nulos:     0 | Únicos:    10
+23. dia_semana_sin                 | Tipo: float64    | Nulos:     0 | Únicos:     7
+24. dia_semana_cos                 | Tipo: float64    | Nulos:     0 | Únicos:     7
+25. total_gasto                    | Tipo: float64    | Nulos:     0 | Únicos:    21
+26. ticket_medio                   | Tipo: float64    | Nulos:     0 | Únicos:    21
+27. std_gasto                      | Tipo: float64    | Nulos:    21 | Únicos:     0
+28. num_compras                    | Tipo: int64      | Nulos:     0 | Únicos:     1
+29. total_itens                    | Tipo: int64      | Nulos:     0 | Únicos:     5
+30. media_itens                    | Tipo: float64    | Nulos:     0 | Únicos:     5
+31. preco_medio_produto            | Tipo: float64    | Nulos:     0 | Únicos:    20
+32. popularidade_produto           | Tipo: int64      | Nulos:     0 | Únicos:     2
+33. total_vendido_produto          | Tipo: int64      | Nulos:     0 | Únicos:     5
+34. recencia                       | Tipo: int64      | Nulos:     0 | Únicos:    21
+35. frequencia                     | Tipo: int64      | Nulos:     0 | Únicos:     1
+36. valor_total                    | Tipo: float64    | Nulos:     0 | Únicos:    21
+37. valor_por_unidade              | Tipo: float64    | Nulos:     0 | Únicos:    21
+38. engajamento_por_idade          | Tipo: float64    | Nulos:     0 | Únicos:    21
+39. engajamento_x_idade            | Tipo: float64    | Nulos:     0 | Únicos:    21
+40. valor_por_idade                | Tipo: float64    | Nulos:     0 | Únicos:    21
+
+================================================================================
+TARGET (cancelou_assinatura)
+================================================================================
+
+Distribuição:
+cancelou_assinatura
+0    11
+1    10
+Name: count, dtype: int64
+
+Proporção:
+cancelou_assinatura
+0    0.52381
+1    0.47619
+Name: proportion, dtype: float64

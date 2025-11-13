@@ -1,0 +1,101 @@
+cliente_id;nome;idade;cidade;pontuacao_engajamento;assinante_clube;cancelou_assinatura
+1;Cliente 1;66;Fortaleza;4.45;Não;Sim
+2;Cliente 2;32;Salvador;9.57;Sim;Não
+3;Cliente 3;41;Belo Horizonte;6.31;Sim;Não
+4;Cliente 4;29;Curitiba;7.82;Não;Sim
+5;Cliente 5;60;Brasília;3.29;Sim;Não
+6;Cliente 6;33;Goiânia;4.06;Não;Não
+7;Cliente 7;68;Rio de Janeiro;5.91;Sim;Não
+8;Cliente 8;54;Brasília;9.88;Sim;Sim
+9;Cliente 9;47;Fortaleza;8.14;Sim;Não
+10;Cliente 10;65;Belo Horizonte;3.27;Sim;Sim
+11;Cliente 11;51;Rio de Janeiro;1.63;Sim;Sim
+12;Cliente 12;39;Curitiba;5.27;Não;Não
+13;Cliente 13;37;São Paulo;2.55;Sim;Sim
+14;Cliente 14;42;Curitiba;6.47;Sim;Não
+15;Cliente 15;34;Salvador;7.06;Não;Não
+16;Cliente 16;62;Belo Horizonte;8.45;Sim;Não
+17;Cliente 17;31;Brasília;3.96;Sim;Sim
+18;Cliente 18;44;Fortaleza;6.61;Não;Não
+19;Cliente 19;29;Goiânia;5.01;Sim;Sim
+20;Cliente 20;53;Brasília;6.18;Sim;Não
+21;Cliente 21;26;Salvador;9.81;Não;Não
+22;Cliente 22;40;Goiânia;2.66;Não;Sim
+23;Cliente 23;48;Curitiba;4.32;Sim;Sim
+24;Cliente 24;57;Belo Horizonte;8.94;Sim;Não
+25;Cliente 25;30;Rio de Janeiro;6.53;Sim;Não
+26;Cliente 26;31;Brasília;6.91;Não;Não
+27;Cliente 27;44;São Paulo;7.38;Sim;Não
+28;Cliente 28;56;Goiânia;5.27;Sim;Não
+29;Cliente 29;38;Curitiba;4.88;Não;Sim
+30;Cliente 30;41;Fortaleza;6.62;Sim;Não
+31;Cliente 31;29;Belo Horizonte;9.21;Sim;Não
+32;Cliente 32;60;Salvador;3.74;Não;Sim
+33;Cliente 33;35;Rio de Janeiro;6.47;Sim;Não
+34;Cliente 34;45;Goiânia;7.73;Sim;Sim
+35;Cliente 35;52;Brasília;8.09;Sim;Não
+36;Cliente 36;48;Fortaleza;2.68;Não;Sim
+37;Cliente 37;33;Belo Horizonte;4.52;Sim;Não
+38;Cliente 38;62;São Paulo;7.94;Não;Sim
+39;Cliente 39;39;Salvador;6.13;Sim;Não
+40;Cliente 40;27;Curitiba;5.67;Sim;Não
+41;Cliente 41;50;Brasília;8.44;Não;Não
+42;Cliente 42;34;Rio de Janeiro;3.89;Sim;Sim
+43;Cliente 43;59;Goiânia;6.72;Não;Não
+44;Cliente 44;36;Fortaleza;7.18;Sim;Sim
+45;Cliente 45;46;São Paulo;5.33;Sim;Não
+46;Cliente 46;40;Salvador;4.23;Não;Sim
+47;Cliente 47;55;Belo Horizonte;7.87;Sim;Não
+48;Cliente 48;31;Curitiba;3.11;Não;Sim
+49;Cliente 49;63;Rio de Janeiro;8.26;Sim;Não
+50;Cliente 50;28;Brasília;2.95;Sim;Sim
+51;Cliente 51;43;Fortaleza;7.02;Não;Não
+52;Cliente 52;39;Goiânia;5.41;Sim;Sim
+53;Cliente 53;48;Belo Horizonte;6.78;Sim;Não
+54;Cliente 54;35;Salvador;4.67;Sim;Sim
+55;Cliente 55;59;São Paulo;8.55;Não;Não
+56;Cliente 56;42;Rio de Janeiro;7.39;Sim;Sim
+57;Cliente 57;31;Brasília;2.83;Não;Sim
+58;Cliente 58;66;Curitiba;6.91;Sim;Não
+59;Cliente 59;28;Fortaleza;5.77;Sim;Sim
+60;Cliente 60;36;Goiânia;4.88;Não;Sim
+61;Cliente 61;60;São Paulo;7.61;Sim;Não
+62;Cliente 62;30;Brasília;8.46;Sim;Sim
+63;Cliente 63;45;Rio de Janeiro;3.98;Não;Sim
+64;Cliente 64;37;Belo Horizonte;6.29;Sim;Não
+65;Cliente 65;53;Salvador;4.21;Sim;Sim
+66;Cliente 66;41;Fortaleza;5.53;Não;Sim
+67;Cliente 67;26;Curitiba;8.19;Sim;Não
+68;Cliente 68;47;São Paulo;3.94;Sim;Sim
+69;Cliente 69;50;Brasília;7.68;Não;Não
+70;Cliente 70;33;Belo Horizonte;6.02;Sim;Não
+71;Cliente 71;40;Goiânia;5.14;Não;Sim
+72;Cliente 72;38;Salvador;8.36;Sim;Não
+73;Cliente 73;61;Rio de Janeiro;3.75;Sim;Sim
+74;Cliente 74;28;Curitiba;7.84;Sim;Não
+75;Cliente 75;55;Fortaleza;6.65;Não;Sim
+76;Cliente 76;44;São Paulo;5.92;Sim;Não
+77;Cliente 77;30;Goiânia;7.41;Sim;Não
+78;Cliente 78;58;Salvador;4.86;Não;Sim
+79;Cliente 79;39;Brasília;6.23;Sim;Não
+80;Cliente 80;50;Curitiba;3.68;Não;Sim
+81;Cliente 81;32;Fortaleza;6.74;Sim;Não
+82;Cliente 82;46;Rio de Janeiro;8.14;Sim;Sim
+83;Cliente 83;36;Belo Horizonte;7.26;Sim;Não
+84;Cliente 84;42;Salvador;5.33;Não;Sim
+85;Cliente 85;49;Curitiba;6.11;Sim;Sim
+86;Cliente 86;60;Goiânia;7.98;Sim;Não
+87;Cliente 87;34;Brasília;3.54;Não;Sim
+88;Cliente 88;56;São Paulo;6.87;Sim;Não
+89;Cliente 89;29;Rio de Janeiro;4.69;Sim;Sim
+90;Cliente 90;63;Fortaleza;5.94;Sim;Não
+91;Cliente 91;38;Belo Horizonte;8.51;Não;Não
+92;Cliente 92;27;Curitiba;7.33;Sim;Não
+93;Cliente 93;55;Goiânia;3.88;Não;Sim
+94;Cliente 94;40;Salvador;6.09;Sim;Não
+95;Cliente 95;35;Rio de Janeiro;7.76;Sim;Sim
+96;Cliente 96;48;São Paulo;5.19;Não;Sim
+97;Cliente 97;59;Belo Horizonte;4.27;Sim;Não
+98;Cliente 98;33;Fortaleza;6.93;Sim;Não
+99;Cliente 99;45;Brasília;8.67;Sim;Não
+100;Cliente 100;37;Goiânia;5.36;Não;Sim

@@ -1,0 +1,101 @@
+produto_id;nome;pais;safra;tipo_uva
+1;Vinho 1;França;2020;Merlot
+2;Vinho 2;Brasil;2018;Sauvignon Blanc
+3;Vinho 3;Chile;2021;Chardonnay
+4;Vinho 4;Itália;2022;Cabernet Sauvignon
+5;Vinho 5;Portugal;2019;Malbec
+6;Vinho 6;Espanha;2021;Syrah
+7;Vinho 7;Argentina;2023;Pinot Noir
+8;Vinho 8;África do Sul;2020;Tempranillo
+9;Vinho 9;Chile;2022;Cabernet Sauvignon
+10;Vinho 10;França;2017;Syrah
+11;Vinho 11;Brasil;2021;Chardonnay
+12;Vinho 12;Itália;2023;Merlot
+13;Vinho 13;Espanha;2020;Malbec
+14;Vinho 14;Argentina;2019;Cabernet Sauvignon
+15;Vinho 15;Portugal;2021;Pinot Noir
+16;Vinho 16;França;2020;Sauvignon Blanc
+17;Vinho 17;África do Sul;2022;Syrah
+18;Vinho 18;Chile;2021;Tempranillo
+19;Vinho 19;Brasil;2020;Merlot
+20;Vinho 20;Itália;2018;Chardonnay
+21;Vinho 21;Portugal;2019;Cabernet Sauvignon
+22;Vinho 22;França;2022;Malbec
+23;Vinho 23;Espanha;2023;Pinot Noir
+24;Vinho 24;Argentina;2021;Tempranillo
+25;Vinho 25;África do Sul;2020;Syrah
+26;Vinho 26;Chile;2023;Chardonnay
+27;Vinho 27;Brasil;2019;Merlot
+28;Vinho 28;Itália;2022;Sauvignon Blanc
+29;Vinho 29;Portugal;2021;Pinot Noir
+30;Vinho 30;França;2020;Cabernet Sauvignon
+31;Vinho 31;Espanha;2018;Chardonnay
+32;Vinho 32;Argentina;2022;Merlot
+33;Vinho 33;África do Sul;2019;Sauvignon Blanc
+34;Vinho 34;Chile;2023;Malbec
+35;Vinho 35;Brasil;2020;Syrah
+36;Vinho 36;Itália;2021;Tempranillo
+37;Vinho 37;Portugal;2018;Merlot
+38;Vinho 38;França;2022;Pinot Noir
+39;Vinho 39;Espanha;2019;Cabernet Sauvignon
+40;Vinho 40;Argentina;2021;Syrah
+41;Vinho 41;África do Sul;2020;Sauvignon Blanc
+42;Vinho 42;Chile;2022;Tempranillo
+43;Vinho 43;Brasil;2023;Chardonnay
+44;Vinho 44;Itália;2019;Merlot
+45;Vinho 45;Portugal;2020;Malbec
+46;Vinho 46;França;2021;Sauvignon Blanc
+47;Vinho 47;Espanha;2022;Cabernet Sauvignon
+48;Vinho 48;Argentina;2023;Pinot Noir
+49;Vinho 49;África do Sul;2018;Syrah
+50;Vinho 50;Chile;2017;Merlot
+51;Vinho 51;Brasil;2019;Tempranillo
+52;Vinho 52;Itália;2020;Cabernet Sauvignon
+53;Vinho 53;Portugal;2023;Chardonnay
+54;Vinho 54;França;2021;Pinot Noir
+55;Vinho 55;Espanha;2020;Malbec
+56;Vinho 56;Argentina;2022;Sauvignon Blanc
+57;Vinho 57;África do Sul;2019;Merlot
+58;Vinho 58;Chile;2023;Chardonnay
+59;Vinho 59;Brasil;2021;Cabernet Sauvignon
+60;Vinho 60;Itália;2018;Syrah
+61;Vinho 61;Portugal;2019;Tempranillo
+62;Vinho 62;França;2022;Merlot
+63;Vinho 63;Espanha;2020;Chardonnay
+64;Vinho 64;Argentina;2021;Pinot Noir
+65;Vinho 65;África do Sul;2017;Sauvignon Blanc
+66;Vinho 66;Chile;2019;Malbec
+67;Vinho 67;Brasil;2020;Merlot
+68;Vinho 68;Itália;2022;Chardonnay
+69;Vinho 69;Portugal;2021;Cabernet Sauvignon
+70;Vinho 70;França;2023;Tempranillo
+71;Vinho 71;Espanha;2018;Pinot Noir
+72;Vinho 72;Argentina;2019;Sauvignon Blanc
+73;Vinho 73;África do Sul;2021;Malbec
+74;Vinho 74;Chile;2020;Syrah
+75;Vinho 75;Brasil;2019;Merlot
+76;Vinho 76;Itália;2023;Chardonnay
+77;Vinho 77;Portugal;2018;Cabernet Sauvignon
+78;Vinho 78;França;2021;Pinot Noir
+79;Vinho 79;Espanha;2022;Malbec
+80;Vinho 80;Argentina;2020;Sauvignon Blanc
+81;Vinho 81;África do Sul;2023;Merlot
+82;Vinho 82;Chile;2019;Chardonnay
+83;Vinho 83;Brasil;2021;Cabernet Sauvignon
+84;Vinho 84;Itália;2022;Tempranillo
+85;Vinho 85;Portugal;2020;Pinot Noir
+86;Vinho 86;França;2019;Sauvignon Blanc
+87;Vinho 87;Espanha;2023;Chardonnay
+88;Vinho 88;Argentina;2021;Malbec
+89;Vinho 89;África do Sul;2018;Syrah
+90;Vinho 90;Chile;2020;Merlot
+91;Vinho 91;Brasil;2023;Pinot Noir
+92;Vinho 92;Itália;2019;Tempranillo
+93;Vinho 93;Portugal;2021;Chardonnay
+94;Vinho 94;França;2022;Cabernet Sauvignon
+95;Vinho 95;Espanha;2020;Malbec
+96;Vinho 96;Argentina;2023;Sauvignon Blanc
+97;Vinho 97;África do Sul;2020;Syrah
+98;Vinho 98;Chile;2019;Pinot Noir
+99;Vinho 99;Brasil;2022;Chardonnay
+100;Vinho 100;Itália;2021;Tempranillo
