@@ -13,14 +13,37 @@ sys.path.append(str(Path(__file__).parent / 'src'))
 from models.predictor import ChurnPredictor, SalesPredictor, ProductRecommender
 
 
-def show_churn_prediction():
-    """Interface para predição de churn"""
+@st.cache_data
+def carregar_clientes_com_compras():
+    """
+    Carrega lista de clientes que possuem histórico de compras.
+    Retorna um dicionário {label: cliente_id} para uso em selectbox.
+    """
+    from data.data_loader import DataLoader
 
-    st.markdown('<h3><i class="fas fa-bullseye"></i> Predição de Churn de Clientes</h3>', unsafe_allow_html=True)
+    loader = DataLoader(data_dir="data")
+    clientes, _, compras = loader.load_data()
+
+    # Filtrar apenas clientes que têm compras
+    clientes_com_compras = clientes[clientes['cliente_id'].isin(compras['cliente_id'].unique())]
+
+    # Criar lista para o selectbox
+    clientes_options = {}
+    for _, row in clientes_com_compras.iterrows():
+        label = f"{row['nome']} (ID: {row['cliente_id']}) - {row['cidade']}"
+        clientes_options[label] = row['cliente_id']
+
+    return clientes_options
+
+
+def show_cancelamento_prediction():
+    """Interface para predição de cancelamento"""
+
+    st.markdown('<h3><i class="fas fa-bullseye"></i> Previsão de Cancelamento de Assinaturas</h3>', unsafe_allow_html=True)
 
     st.info("""
-    **Predição de Churn** identifica clientes em risco de cancelar a assinatura.
-    Preencha os dados abaixo para obter uma predição instantânea.
+    **Previsão de Cancelamento** identifica clientes em risco de cancelar a assinatura.
+    Preencha os dados abaixo para obter uma previsão instantânea.
     """)
 
     # Formulário para entrada de dados
@@ -30,31 +53,39 @@ def show_churn_prediction():
         col1, col2 = st.columns(2)
 
         with col1:
-            cliente_id = st.number_input("ID do Cliente", min_value=1, value=1)
-            nome = st.text_input("Nome", value="Cliente Teste")
-            idade = st.number_input("Idade", min_value=18, max_value=100, value=35)
+            cliente_id = st.number_input("ID do Cliente", min_value=1, value=1,
+                                         help="Número de identificação único do cliente no sistema")
+            nome = st.text_input("Nome", value="Cliente Teste",
+                                help="Nome completo do cliente")
+            idade = st.number_input("Idade", min_value=18, max_value=100, value=35,
+                                   help="Idade do cliente em anos")
             cidade = st.selectbox("Cidade", [
                 "São Paulo", "Rio de Janeiro", "Belo Horizonte",
                 "Brasília", "Salvador", "Fortaleza", "Curitiba",
                 "Goiânia"
-            ])
+            ], help="Cidade onde o cliente reside")
             pontuacao_engajamento = st.slider(
-                "Pontuação de Engajamento (1-10)",
-                min_value=1.0, max_value=10.0, value=5.0, step=0.1
+                "Nível de Engajamento (1-10)",
+                min_value=1.0, max_value=10.0, value=5.0, step=0.1,
+                help="Quão ativo é o cliente? (1=raramente interage, 10=muito ativo). "
+                     "Considere: abre emails, participa de eventos, responde pesquisas, compra regularmente."
             )
 
         with col2:
-            assinante_clube = st.selectbox("Assinante do Clube", ["Sim", "Não"])
-            valor = st.number_input("Valor da Última Compra (R$)", min_value=0.0, value=150.0, step=10.0)
-            quantidade = st.number_input("Quantidade", min_value=1, max_value=10, value=2)
+            assinante_clube = st.selectbox("Assinante do Clube", ["Sim", "Não"],
+                                          help="Cliente é membro do clube de vinhos? Membros recebem vinhos mensalmente e têm descontos especiais.")
+            valor = st.number_input("Valor da Última Compra (R$)", min_value=0.0, value=150.0, step=10.0,
+                                   help="Valor em reais da compra mais recente do cliente")
+            quantidade = st.number_input("Quantidade", min_value=1, max_value=10, value=2,
+                                        help="Número de garrafas compradas na última compra")
             pais = st.selectbox("País do Vinho Preferido", [
                 "Brasil", "França", "Chile", "Argentina", "Itália",
                 "Espanha", "Portugal", "África do Sul"
-            ])
+            ], help="País de origem dos vinhos que o cliente mais compra")
             tipo_uva = st.selectbox("Tipo de Uva Preferido", [
                 "Merlot", "Cabernet Sauvignon", "Chardonnay",
                 "Sauvignon Blanc", "Pinot Noir", "Malbec", "Syrah"
-            ])
+            ], help="Tipo de uva/casta que o cliente prefere nos vinhos")
 
         submitted = st.form_submit_button("Fazer Predição", type="primary")
 
@@ -88,14 +119,14 @@ def show_churn_prediction():
 
                 with col1:
                     st.metric(
-                        "Risco de Churn",
+                        "Risco de Cancelamento",
                         result['risk_level'],
                         f"{result['churn_probability']:.1%}"
                     )
 
                 with col2:
                     st.metric(
-                        "Probabilidade de Churn",
+                        "Chance de Cancelar",
                         f"{result['churn_probability']:.1%}",
                         delta=f"-{result['retain_probability']:.1%}" if result['will_churn'] else None
                     )
@@ -119,7 +150,7 @@ def show_churn_prediction():
                 ])
 
                 fig.update_layout(
-                    title="Probabilidades de Churn",
+                    title="Probabilidades de Cancelamento",
                     yaxis_title="Probabilidade",
                     yaxis_tickformat=".0%",
                     showlegend=False,
@@ -133,11 +164,11 @@ def show_churn_prediction():
                 st.markdown('### <i class="fas fa-lightbulb"></i> Recomendações', unsafe_allow_html=True)
 
                 if result['risk_level'] == "Alto":
-                    st.markdown('<p style="color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 5px;"><i class="fas fa-exclamation-triangle"></i> ATENÇÃO: Cliente em alto risco de churn!</p>', unsafe_allow_html=True)
+                    st.markdown('<p style="color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 5px;"><i class="fas fa-exclamation-triangle"></i> ⚠️ ATENÇÃO: Cliente em alto risco de cancelar!</p>', unsafe_allow_html=True)
                 elif result['risk_level'] == "Médio":
                     st.warning("⚡ Cliente em risco médio - ação recomendada")
                 else:
-                    st.markdown('<p style="color: #28a745; background-color: #d4edda; padding: 10px; border-radius: 5px;"><i class="fas fa-check-circle"></i> Cliente com baixo risco de churn</p>', unsafe_allow_html=True)
+                    st.markdown('<p style="color: #28a745; background-color: #d4edda; padding: 10px; border-radius: 5px;"><i class="fas fa-check-circle"></i> ✅ Cliente satisfeito - baixo risco de cancelamento</p>', unsafe_allow_html=True)
 
                 for rec in result['recommendations']:
                     st.markdown(f"- {rec}")
@@ -243,17 +274,38 @@ def show_sales_prediction():
 
         st.info("Prevê quando e quanto um cliente gastará em sua próxima compra.")
 
-        cliente_id = st.number_input("ID do Cliente", min_value=1, value=1, key="sales_customer")
+        # Carregar lista de clientes com histórico de compras
+        try:
+            clientes_options = carregar_clientes_com_compras()
+
+            if len(clientes_options) == 0:
+                st.warning("⚠️ Nenhum cliente com histórico de compras encontrado.")
+                return
+
+            # Selectbox com nomes de clientes
+            cliente_selecionado = st.selectbox(
+                "Selecione o Cliente",
+                options=list(clientes_options.keys()),
+                help="Apenas clientes com histórico de compras aparecem nesta lista"
+            )
+
+            cliente_id = clientes_options[cliente_selecionado]
+
+        except Exception as e:
+            st.error(f"Erro ao carregar clientes: {e}")
+            return
 
         if st.button("🔮 Prever Próxima Compra", type="primary"):
             with st.spinner("Analisando histórico..."):
                 try:
                     predictor = SalesPredictor()
-                    predictor.load_historical_data()
+                    predictor.load_historical_data(data_path="data")
                     result = predictor.predict_next_purchase(cliente_id)
 
                     if 'error' in result:
                         st.error(f"❌ {result['error']}")
+                        if 'suggestion' in result:
+                            st.info(f"💡 {result['suggestion']}")
                     else:
                         st.success("✅ Predição concluída!")
 
@@ -316,7 +368,7 @@ def show_sales_prediction():
             with st.spinner("Calculando projeções..."):
                 try:
                     predictor = SalesPredictor()
-                    predictor.load_historical_data()
+                    predictor.load_historical_data(data_path="data")
                     result = predictor.predict_revenue(months_ahead=months)
 
                     st.success("✅ Projeção concluída!")
@@ -384,19 +436,38 @@ def show_product_recommendation():
     Sistema de recomendação baseado em compras anteriores e perfil do cliente.
     """)
 
-    col1, col2 = st.columns(2)
+    # Carregar lista de clientes com histórico de compras
+    try:
+        clientes_options = carregar_clientes_com_compras()
 
-    with col1:
-        cliente_id = st.number_input("ID do Cliente", min_value=1, value=1, key="rec_customer")
+        if len(clientes_options) == 0:
+            st.warning("⚠️ Nenhum cliente com histórico de compras encontrado.")
+            return
 
-    with col2:
-        top_n = st.slider("Número de Recomendações", min_value=3, max_value=10, value=5)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Selectbox com nomes de clientes
+            cliente_selecionado = st.selectbox(
+                "Selecione o Cliente",
+                options=list(clientes_options.keys()),
+                help="Apenas clientes com histórico de compras aparecem nesta lista",
+                key="rec_customer_select"
+            )
+            cliente_id = clientes_options[cliente_selecionado]
+
+        with col2:
+            top_n = st.slider("Número de Recomendações", min_value=3, max_value=10, value=5)
+
+    except Exception as e:
+        st.error(f"Erro ao carregar clientes: {e}")
+        return
 
     if st.button("🎯 Gerar Recomendações", type="primary"):
         with st.spinner("Analisando preferências..."):
             try:
                 recommender = ProductRecommender()
-                recommender.load_historical_data()
+                recommender.load_historical_data(data_path="data")
                 recommendations = recommender.recommend_products(cliente_id, top_n)
 
                 if not recommendations:

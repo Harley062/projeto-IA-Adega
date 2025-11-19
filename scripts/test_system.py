@@ -4,7 +4,8 @@ Script de teste rápido do sistema
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent / 'src'))
+# Adicionar src ao path (script está em scripts/, src está na raiz)
+sys.path.append(str(Path(__file__).parent.parent / 'src'))
 
 from data.data_loader import DataLoader
 from utils.logger import setup_logger
@@ -16,7 +17,7 @@ def test_data_loading():
     print("="*60)
 
     try:
-        loader = DataLoader()
+        loader = DataLoader(data_dir="data")
         clientes, produtos, compras = loader.load_data()
 
         print(f"✓ Clientes carregados: {len(clientes)} registros")
@@ -51,7 +52,7 @@ def test_feature_engineering():
     try:
         from data.feature_engineering import FeatureEngineer
 
-        loader = DataLoader()
+        loader = DataLoader(data_dir="data")
         loader.load_data()
         loader.validate_data()
         data = loader.merge_data()
@@ -93,7 +94,7 @@ def test_visualization():
     try:
         from data.eda import ExploratoryAnalysis
 
-        loader = DataLoader()
+        loader = DataLoader(data_dir="data")
         loader.load_data()
         loader.validate_data()
         data = loader.merge_data()

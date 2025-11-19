@@ -15,6 +15,7 @@ sys.path.append(str(Path(__file__).parent / 'src'))
 
 from data.data_loader import DataLoader
 from models.model_trainer import ModelTrainer
+from utils.glossario import FAQ, GLOSSARIO
 
 # Configuração da página
 st.set_page_config(
@@ -84,7 +85,7 @@ def icon(name, color=None):
 def load_data():
     """Carrega e processa os dados"""
     try:
-        loader = DataLoader()
+        loader = DataLoader(data_dir="data")
         loader.load_data()
         loader.validate_data()
         data = loader.merge_data()
@@ -132,11 +133,12 @@ def main():
         # Menu com ícones (usando emojis para evitar HTML não suportado)
         st.markdown("**Selecione uma página:**")
         page_options = {
-            "Dashboard Principal": "🏠 Dashboard Principal",
-            "Análise Exploratória": "📊 Análise Exploratória",
-            "Modelos e Predições": "🤖 Modelos e Predições",
-            "Insights de Negócio": "💼 Insights de Negócio",
-            "Configurações": "⚙️ Configurações"
+            "Dashboard Principal": "🏠 Visão Geral",
+            "Análise Exploratória": "📊 Gráficos e Tendências",
+            "Modelos e Predições": "🔮 Previsões Inteligentes",
+            "Insights de Negócio": "💡 Recomendações",
+            "Ajuda": "❓ Ajuda e Glossário",
+            "Configurações": "⚙️ Atualizar Dados"
         }
 
         page = st.radio(
@@ -156,14 +158,14 @@ def main():
         plots_exist = len(list(Path("output/plots").glob("*.png"))) > 0 if Path("output/plots").exists() else False
 
         if model_exists:
-            st.markdown('<p style="color: #28a745;"><i class="fas fa-check-circle"></i> Modelo treinado</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #28a745;"><i class="fas fa-check-circle"></i> ✅ Sistema pronto</p>', unsafe_allow_html=True)
         else:
-            st.markdown('<p style="color: #ffc107;"><i class="fas fa-exclamation-triangle"></i> Execute o pipeline primeiro</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffc107;"><i class="fas fa-exclamation-triangle"></i> ⚠️ Sistema precisa ser configurado</p>', unsafe_allow_html=True)
 
         if plots_exist:
-            st.markdown('<p style="color: #28a745;"><i class="fas fa-check-circle"></i> Visualizações geradas</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #28a745;"><i class="fas fa-check-circle"></i> ✅ Análises atualizadas</p>', unsafe_allow_html=True)
         else:
-            st.markdown('<p style="color: #ffc107;"><i class="fas fa-exclamation-triangle"></i> Execute o pipeline primeiro</p>', unsafe_allow_html=True)
+            st.markdown('<p style="color: #ffc107;"><i class="fas fa-exclamation-triangle"></i> ⚠️ Aguardando processamento</p>', unsafe_allow_html=True)
 
         st.divider()
         st.caption("Sistema v1.0.0")
@@ -172,8 +174,32 @@ def main():
     data, loader = load_data()
 
     if data is None:
-        st.markdown('<p style="color: #dc3545;"><i class="fas fa-times-circle"></i> Não foi possível carregar os dados. Execute o pipeline primeiro.</p>', unsafe_allow_html=True)
-        st.code("python scripts/pipeline.py", language="bash")
+        st.error("❌ Não foi possível carregar os dados!")
+
+        st.markdown("""
+        ### 📋 Primeiros Passos
+
+        Para começar a usar o sistema, siga estes passos:
+
+        1. **Verifique os arquivos de dados**
+           - Certifique-se de que os arquivos CSV estão na pasta `data/`
+           - Arquivos necessários: `Cliente.csv`, `produtos.csv`, `Compras.csv`
+
+        2. **Processe os dados**
+           - Vá para a página **"⚙️ Atualizar Dados"** no menu lateral
+           - Clique no botão **"▶️ Processar Dados"**
+           - Aguarde 2-5 minutos (o sistema vai processar todos os dados)
+
+        3. **Explore o dashboard**
+           - Após o processamento, volte para esta página
+           - Todas as análises e gráficos estarão disponíveis!
+
+        💡 **Dica**: Você só precisa fazer isso uma vez, ou quando houver novos dados para processar.
+        """)
+
+        with st.expander("🔧 Para usuários técnicos - Como executar via terminal"):
+            st.code("python scripts/pipeline.py", language="bash")
+
         return
 
     # Páginas
@@ -185,6 +211,8 @@ def main():
         show_models()
     elif page == "Insights de Negócio":
         show_business_insights(data)
+    elif page == "Ajuda":
+        show_help()
     elif page == "Configurações":
         show_settings()
 
@@ -193,6 +221,19 @@ def show_dashboard(data, loader):
     """Página principal do dashboard"""
 
     st.markdown('<h2><i class="fas fa-chart-line icon"></i> Visão Geral do Sistema</h2>', unsafe_allow_html=True)
+
+    # Indicador de status do sistema
+    model_exists = Path("output/models/best_model_Gradient_Boosting.pkl").exists()
+    plots_exist = len(list(Path("output/plots").glob("*.png"))) > 0 if Path("output/plots").exists() else False
+
+    if model_exists and plots_exist:
+        st.success("✅ **Sistema pronto e atualizado!** Todas as análises e previsões estão disponíveis.")
+    elif model_exists or plots_exist:
+        st.info("ℹ️ **Sistema parcialmente configurado.** Vá em '⚙️ Atualizar Dados' para processar completamente.")
+    else:
+        st.warning("⚠️ **Sistema aguardando configuração inicial.** Vá em '⚙️ Atualizar Dados' para começar.")
+
+    st.divider()
 
     # Métricas principais
     col1, col2, col3, col4 = st.columns(4)
@@ -311,15 +352,29 @@ def show_dashboard(data, loader):
 def show_eda():
     """Página de Análise Exploratória de Dados"""
 
-    st.markdown('<h2><i class="fas fa-chart-pie icon"></i> Análise Exploratória de Dados (EDA)</h2>', unsafe_allow_html=True)
+    st.markdown('<h2><i class="fas fa-chart-pie icon"></i> Gráficos e Análise de Tendências</h2>', unsafe_allow_html=True)
 
     st.markdown('<div class="icon-info"><i class="fas fa-lightbulb"></i> Todas as visualizações foram geradas automaticamente pelo pipeline.</div>', unsafe_allow_html=True)
 
     plots_dir = Path("output/plots")
 
     if not plots_dir.exists() or len(list(plots_dir.glob("*.png"))) == 0:
-        st.markdown('<p style="color: #ffc107;"><i class="fas fa-exclamation-triangle"></i> Nenhuma visualização encontrada. Execute o pipeline primeiro:</p>', unsafe_allow_html=True)
-        st.code("python scripts/pipeline.py", language="bash")
+        st.warning("⚠️ Gráficos ainda não foram gerados!")
+
+        st.info("""
+        ### 📊 Como gerar os gráficos:
+
+        1. Vá para a página **"⚙️ Atualizar Dados"** no menu lateral
+        2. Clique no botão **"▶️ Processar Dados"**
+        3. Aguarde alguns minutos
+        4. Volte aqui para ver todos os gráficos!
+
+        Os gráficos mostram padrões importantes nos seus dados de vendas e clientes.
+        """)
+
+        with st.expander("🔧 Executar via terminal (usuários técnicos)"):
+            st.code("python scripts/pipeline.py", language="bash")
+
         return
 
     # Tabs para diferentes análises
@@ -341,12 +396,12 @@ def show_eda():
         with col1:
             img = load_image(plots_dir / "numerical_distributions.png")
             if img:
-                st.image(img, caption="Distribuições Numéricas - Valores, idades, quantidades", use_column_width=True)
+                st.image(img, caption="Distribuições Numéricas - Valores, idades, quantidades", use_container_width=True)
 
         with col2:
             img = load_image(plots_dir / "categorical_distributions.png")
             if img:
-                st.image(img, caption="Distribuições Categóricas - Cidades, tipos de vinho, assinantes", use_column_width=True)
+                st.image(img, caption="Distribuições Categóricas - Cidades, tipos de vinho, assinantes", use_container_width=True)
 
     with tab2:
         st.subheader("Matriz de Correlação")
@@ -356,7 +411,7 @@ def show_eda():
 
         img = load_image(plots_dir / "correlation_matrix.png")
         if img:
-            st.image(img, caption="Correlação entre Variáveis - Identifique relações importantes", use_column_width=True)
+            st.image(img, caption="Correlação entre Variáveis - Identifique relações importantes", use_container_width=True)
         else:
             st.info("Matriz de correlação não disponível")
 
@@ -368,7 +423,7 @@ def show_eda():
 
         img = load_image(plots_dir / "boxplots.png")
         if img:
-            st.image(img, caption="Boxplots - Pontos fora das caixas são valores atípicos", use_column_width=True)
+            st.image(img, caption="Boxplots - Pontos fora das caixas são valores atípicos", use_container_width=True)
         else:
             st.info("Boxplots não disponíveis")
 
@@ -380,7 +435,7 @@ def show_eda():
 
         img = load_image(plots_dir / "sales_over_time.png")
         if img:
-            st.image(img, caption="Vendas ao Longo do Tempo - Identifique sazonalidade e tendências", use_column_width=True)
+            st.image(img, caption="Vendas ao Longo do Tempo - Identifique sazonalidade e tendências", use_container_width=True)
         else:
             st.info("Análise temporal não disponível")
 
@@ -388,15 +443,30 @@ def show_eda():
 def show_models():
     """Página de Modelos e Predições"""
 
-    st.markdown('<h2><i class="fas fa-robot icon"></i> Modelos de Machine Learning</h2>', unsafe_allow_html=True)
+    st.markdown('<h2><i class="fas fa-robot icon"></i> Previsões Inteligentes</h2>', unsafe_allow_html=True)
 
     # Verificar se modelo existe
     model_path = Path("output/models/best_model_Gradient_Boosting.pkl")
     report_path = Path("output/reports/evaluation_report.txt")
 
     if not model_path.exists():
-        st.markdown('<p style="color: #ffc107;"><i class="fas fa-exclamation-triangle"></i> Modelo não encontrado. Execute o pipeline primeiro:</p>', unsafe_allow_html=True)
-        st.code("python scripts/pipeline.py", language="bash")
+        st.warning("⚠️ Sistema de previsão ainda não está configurado!")
+
+        st.info("""
+        ### 🔮 Como ativar as previsões inteligentes:
+
+        1. Vá para a página **"⚙️ Atualizar Dados"** no menu lateral
+        2. Clique no botão **"▶️ Processar Dados"**
+        3. Aguarde alguns minutos (o sistema vai treinar os modelos de IA)
+        4. Volte aqui para fazer previsões!
+
+        Com o sistema treinado, você poderá prever quais clientes têm risco de cancelar,
+        estimar vendas futuras e muito mais.
+        """)
+
+        with st.expander("🔧 Executar via terminal (usuários técnicos)"):
+            st.code("python scripts/pipeline.py", language="bash")
+
         return
 
     # Tabs
@@ -405,7 +475,7 @@ def show_models():
     with tab1:
         st.subheader("Performance do Modelo")
 
-        st.info("**O que é isso:** O modelo foi treinado para prever se um cliente vai cancelar a assinatura (churn) ou continuar comprando.\n\n"
+        st.info("**O que é isso:** O sistema foi treinado para prever se um cliente vai cancelar a assinatura ou continuar comprando.\n\n"
                 "**Para que serve:** Identificar clientes em risco ANTES que eles cancelem, permitindo ações preventivas de retenção!")
 
         # Explicação das métricas
@@ -443,7 +513,7 @@ def show_models():
             st.caption("**O que mostra:** Compara previsões vs realidade. Diagonal = acertos, resto = erros.")
             img = load_image(plots_dir / "confusion_matrix.png")
             if img:
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
                 st.success("✅ Verde na diagonal = modelo está acertando!")
 
             st.divider()
@@ -452,14 +522,14 @@ def show_models():
             st.caption("**O que mostra:** Ranking dos melhores modelos testados. O topo é o vencedor!")
             img = load_image(plots_dir / "model_comparison.png")
             if img:
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
 
         with col2:
             st.markdown("##### Curva ROC")
             st.caption("**O que mostra:** Quanto mais próxima do canto superior esquerdo, melhor o modelo.")
             img = load_image(plots_dir / "roc_curve.png")
             if img:
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
                 st.info("📊 Área abaixo da curva (AUC) próxima de 1 = excelente!")
 
             st.divider()
@@ -468,7 +538,7 @@ def show_models():
             st.caption("**O que mostra:** Equilíbrio entre não perder clientes em risco e evitar alarmes falsos.")
             img = load_image(plots_dir / "precision_recall_curve.png")
             if img:
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
 
     with tab2:
         st.markdown('<h3><i class="fas fa-bullseye icon"></i> Sistema Preditivo Completo</h3>', unsafe_allow_html=True)
@@ -476,14 +546,14 @@ def show_models():
         # Sub-tabs para diferentes tipos de predição
         pred_tab1, pred_tab2, pred_tab3, pred_tab4 = st.tabs([
             "Predição Individual",
-            "Predição em Lote",
+            # "Predição em Lote",
             "Predição de Vendas",
             "Recomendação de Produtos"
         ])
 
         with pred_tab1:
-            from pages_prediction import show_churn_prediction
-            show_churn_prediction()
+            from pages_prediction import show_cancelamento_prediction
+            show_cancelamento_prediction()
 
         with pred_tab2:
             from pages_prediction import show_batch_prediction
@@ -505,8 +575,8 @@ def show_models():
 
         img = load_image(Path("output/plots") / "feature_importance.png")
         if img:
-            st.image(img, caption="Importância das Features - Os fatores que mais preveem cancelamento", use_column_width=True)
-            st.success("💡 As barras maiores são os fatores mais importantes para evitar churn!")
+            st.image(img, caption="Importância das Características - Os fatores que mais preveem cancelamento", use_container_width=True)
+            st.success("💡 As barras maiores são os fatores mais importantes para evitar cancelamentos!")
         else:
             st.info("Análise de features não disponível")
 
@@ -514,7 +584,7 @@ def show_models():
 def show_business_insights(data):
     """Página de Insights de Negócio"""
 
-    st.header("💼 Insights de Negócio")
+    st.header("💡 Recomendações para Melhorar Vendas")
 
     plots_dir = Path("output/plots")
 
@@ -537,13 +607,13 @@ def show_business_insights(data):
         with col1:
             img = load_image(plots_dir / "top_products.png")
             if img:
-                st.image(img, caption="Top Produtos - Mantenha sempre em estoque!", use_column_width=True)
+                st.image(img, caption="Top Produtos - Mantenha sempre em estoque!", use_container_width=True)
                 st.warning("⚠️ **Risco:** Falta de estoque dos top produtos = perda de vendas")
 
         with col2:
             img = load_image(plots_dir / "wine_analysis.png")
             if img:
-                st.image(img, caption="Análise de Vinhos - Preferências dos clientes", use_column_width=True)
+                st.image(img, caption="Análise de Vinhos - Preferências dos clientes", use_container_width=True)
                 st.success("💡 **Oportunidade:** Diversifique na categoria mais vendida")
 
     with tab2:
@@ -554,7 +624,7 @@ def show_business_insights(data):
 
         img = load_image(plots_dir / "customer_segmentation.png")
         if img:
-            st.image(img, caption="Segmentação - Cada grupo precisa de uma estratégia diferente", use_column_width=True)
+            st.image(img, caption="Segmentação - Cada grupo precisa de uma estratégia diferente", use_container_width=True)
 
         # Métricas por segmento
         st.divider()
@@ -600,7 +670,7 @@ def show_business_insights(data):
 
         img = load_image(plots_dir / "rfm_analysis.png")
         if img:
-            st.image(img, caption="Análise RFM - Segmentação por valor e comportamento", use_column_width=True)
+            st.image(img, caption="Análise RFM - Segmentação por valor e comportamento", use_container_width=True)
 
         st.markdown("""
         ### 🎯 Como usar o RFM no seu negócio:
@@ -626,8 +696,8 @@ def show_business_insights(data):
         st.subheader("💡 Recomendações Estratégicas Acionáveis")
 
         # Calcular insights detalhados
-        churn_rate = (data['cancelou_assinatura'] == 'Sim').sum() / len(data) * 100
-        churn_count = (data['cancelou_assinatura'] == 'Sim').sum()
+        taxa_cancelamento = (data['cancelou_assinatura'] == 'Sim').sum() / len(data) * 100
+        total_cancelamentos = (data['cancelou_assinatura'] == 'Sim').sum()
         avg_ticket = data['valor'].mean()
         top_city = data.groupby('cidade')['valor'].sum().idxmax()
         top_city_revenue = data.groupby('cidade')['valor'].sum().max()
@@ -648,19 +718,19 @@ def show_business_insights(data):
         col1, col2 = st.columns(2)
 
         with col1:
-            if churn_rate > 15:
-                st.error(f"**⚠️ ALERTA CRÍTICO: Taxa de Churn Alta ({churn_rate:.1f}%)**")
+            if taxa_cancelamento > 15:
+                st.error(f"**⚠️ ALERTA CRÍTICO: Taxa de Cancelamento Alta ({taxa_cancelamento:.1f}%)**")
                 st.markdown(f"""
-                **Situação:** {churn_count} clientes cancelaram a assinatura.
+                **Situação:** {total_cancelamentos} clientes cancelaram a assinatura.
 
                 **Ações URGENTES:**
                 1. 📞 Entre em contato com os clientes que cancelaram nas últimas 2 semanas
                 2. 🎁 Ofereça desconto de recuperação (15-20% off)
                 3. 📧 Envie pesquisa de satisfação para entender os motivos
-                4. 🔍 Use o modelo preditivo para identificar próximos em risco
+                4. 🔍 Use o sistema de previsão para identificar próximos em risco
                 """)
             else:
-                st.success(f"**✅ Taxa de Churn Controlada ({churn_rate:.1f}%)**")
+                st.success(f"**✅ Taxa de Cancelamento Controlada ({taxa_cancelamento:.1f}%)**")
                 st.markdown("Continue monitorando semanalmente.")
 
         with col2:
@@ -777,9 +847,9 @@ def show_business_insights(data):
 
         with tab_retencao:
             st.markdown(f"""
-            #### Programa de Retenção Anti-Churn
+            #### Programa de Retenção e Fidelização
 
-            **Seu Desafio: {churn_count} clientes já cancelaram ({churn_rate:.1f}%)**
+            **Seu Desafio: {total_cancelamentos} clientes já cancelaram ({taxa_cancelamento:.1f}%)**
 
             **Sistema de 3 Camadas:**
 
@@ -801,7 +871,7 @@ def show_business_insights(data):
             - **90 dias:** Última tentativa com benefício único
 
             **KPIs para Monitorar:**
-            - Taxa de churn mensal (meta: <10%)
+            - Taxa de cancelamento mensal (meta: <10%)
             - Taxa de recuperação (meta: >30%)
             - NPS - Net Promoter Score
             - Tempo médio de vida do cliente (CLV)
@@ -818,7 +888,7 @@ def show_business_insights(data):
             st.markdown("""
             **Segunda-feira:**
             - [ ] Revisar vendas da semana anterior
-            - [ ] Executar modelo preditivo de churn
+            - [ ] Executar sistema de previsão de cancelamentos
             - [ ] Contactar top 5 clientes em risco
 
             **Quarta-feira:**
@@ -848,10 +918,150 @@ def show_business_insights(data):
         )
 
 
+def show_help():
+    """Página de Ajuda e Glossário"""
+
+    st.header("❓ Ajuda - Como Usar o Sistema")
+
+    st.markdown("""
+    Bem-vindo à central de ajuda! Aqui você encontra respostas para as dúvidas mais comuns
+    e explicações sobre os termos usados no sistema.
+    """)
+
+    # Tabs para organizar o conteúdo
+    tab1, tab2, tab3 = st.tabs(["❓ Perguntas Frequentes", "📚 Glossário", "🚀 Guia Rápido"])
+
+    with tab1:
+        st.subheader("Perguntas Frequentes (FAQ)")
+
+        for faq_item in FAQ:
+            with st.expander(f"❓ {faq_item['pergunta']}"):
+                st.markdown(faq_item['resposta'])
+
+    with tab2:
+        st.subheader("Glossário de Termos")
+
+        st.info("**Traduzimos os termos técnicos para você!** Aqui está o que cada termo significa:")
+
+        # Busca no glossário
+        busca = st.text_input("🔍 Buscar termo no glossário", placeholder="Digite um termo...")
+
+        if busca:
+            encontrados = [(t, s) for t, s in GLOSSARIO.items() if busca.lower() in t.lower() or busca.lower() in s.lower()]
+            if encontrados:
+                st.success(f"Encontrados {len(encontrados)} resultado(s):")
+                for termo_tecnico, termo_simples in encontrados:
+                    st.markdown(f"**{termo_tecnico}** → {termo_simples}")
+            else:
+                st.warning("Nenhum termo encontrado. Tente outra palavra-chave.")
+        else:
+            # Organizar glossário por categorias
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("### 🤖 Termos de Inteligência Artificial")
+                ml_terms = {
+                    "Churn": "Cancelamento",
+                    "Machine Learning": "Inteligência Artificial",
+                    "Model": "Sistema Inteligente",
+                    "Pipeline": "Processamento",
+                    "Feature Engineering": "Preparação de Dados",
+                }
+                for tecnico, simples in ml_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 📊 Métricas do Sistema")
+                metric_terms = {
+                    "Accuracy": "Precisão Geral",
+                    "Precision": "Taxa de Acerto",
+                    "Recall": "Taxa de Detecção",
+                    "F1-Score": "Nota Geral",
+                    "ROC-AUC": "Precisão do Sistema",
+                }
+                for tecnico, simples in metric_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+            with col2:
+                st.markdown("### 📈 Termos de Negócio")
+                business_terms = {
+                    "Lifetime Value": "Valor Total do Cliente",
+                    "RFM Analysis": "Análise RFM",
+                    "Engagement Score": "Nível de Engajamento",
+                    "Ticket Médio": "Valor Médio de Compra",
+                }
+                for tecnico, simples in business_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 🔧 Operações")
+                ops_terms = {
+                    "Batch Prediction": "Análise em Lote",
+                    "Predict": "Prever",
+                }
+                for tecnico, simples in ops_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+    with tab3:
+        st.subheader("🚀 Guia Rápido - Primeiros Passos")
+
+        st.markdown("""
+        ### 1️⃣ Primeira Vez no Sistema
+
+        Se é sua primeira vez, siga esta ordem:
+
+        1. **Verifique os dados**
+           - Os arquivos CSV devem estar na pasta `data/`
+           - Arquivos: `Cliente.csv`, `produtos.csv`, `Compras.csv`
+
+        2. **Processe os dados**
+           - Vá em **"⚙️ Atualizar Dados"**
+           - Clique em **"▶️ Processar Dados"**
+           - Aguarde 2-5 minutos
+
+        3. **Explore o dashboard**
+           - Comece pela **"🏠 Visão Geral"**
+           - Veja os **"📊 Gráficos e Tendências"**
+           - Teste as **"🔮 Previsões Inteligentes"**
+           - Leia as **"💡 Recomendações"**
+
+        ---
+
+        ### 2️⃣ Atalhos Úteis
+
+        | Preciso... | Vá para... |
+        |------------|-----------|
+        | Ver números gerais | 🏠 Visão Geral |
+        | Ver padrões nos dados | 📊 Gráficos e Tendências |
+        | Prever cancelamentos | 🔮 Previsões Inteligentes |
+        | Ter ideias de ações | 💡 Recomendações |
+        | Processar novos dados | ⚙️ Atualizar Dados |
+        | Tirar dúvidas | ❓ Ajuda |
+
+        ---
+
+        ### 3️⃣ Suporte
+
+        **Problemas comuns e soluções:**
+
+        - **"Não consigo ver os gráficos"**
+          → Vá em "⚙️ Atualizar Dados" e processe os dados
+
+        - **"Erro ao carregar dados"**
+          → Verifique se os arquivos CSV estão na pasta `data/`
+
+        - **"Sistema lento"**
+          → Normal no primeiro processamento. Aguarde completar.
+
+        - **"Não entendo um termo"**
+          → Veja a aba "📚 Glossário" acima
+        """)
+
+        st.success("🎯 **Lembre-se**: O sistema é uma ferramenta para ajudar você a tomar decisões melhores. Use seu conhecimento do negócio junto com os dados!")
+
+
 def show_settings():
     """Página de Configurações"""
 
-    st.header("⚙️ Configurações do Sistema")
+    st.header("⚙️ Atualizar e Processar Dados")
 
     st.subheader("🔄 Executar Pipeline")
 

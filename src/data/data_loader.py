@@ -30,32 +30,75 @@ class DataLoader:
         try:
             logger.info("Carregando dados...")
 
-            # Carregar CSVs com o delimitador correto
-            self.clientes = pd.read_csv(
-                self.data_dir / 'Cliente.csv',
-                delimiter=';',
-                encoding='utf-8'
-            )
-            self.produtos = pd.read_csv(
-                self.data_dir / 'produtos.csv',
-                delimiter=';',
-                encoding='utf-8'
-            )
-            self.compras = pd.read_csv(
-                self.data_dir / 'Compras.csv',
-                delimiter=';',
-                encoding='utf-8'
-            )
+            # Verificar se os arquivos existem antes de tentar carregar
+            arquivos_necessarios = {
+                'Cliente.csv': 'Dados dos Clientes',
+                'produtos.csv': 'Catálogo de Produtos',
+                'Compras.csv': 'Histórico de Vendas'
+            }
 
-            logger.info(f"Clientes carregados: {len(self.clientes)} registros")
-            logger.info(f"Produtos carregados: {len(self.produtos)} registros")
-            logger.info(f"Compras carregadas: {len(self.compras)} registros")
+            arquivos_faltando = []
+            for arquivo, descricao in arquivos_necessarios.items():
+                caminho = self.data_dir / arquivo
+                if not caminho.exists():
+                    arquivos_faltando.append(f"  • {arquivo} ({descricao})")
+
+            if arquivos_faltando:
+                mensagem_erro = (
+                    f"📂 Arquivos de dados não encontrados!\n\n"
+                    f"Faltam os seguintes arquivos na pasta '{self.data_dir}':\n"
+                    + "\n".join(arquivos_faltando) +
+                    f"\n\n💡 O que fazer:\n"
+                    f"  1. Verifique se os arquivos CSV estão na pasta correta\n"
+                    f"  2. Confirme que os nomes dos arquivos estão corretos\n"
+                    f"  3. Se necessário, copie os arquivos para a pasta '{self.data_dir}'"
+                )
+                logger.error(mensagem_erro)
+                raise FileNotFoundError(mensagem_erro)
+
+            # Carregar CSVs com o delimitador correto
+            try:
+                self.clientes = pd.read_csv(
+                    self.data_dir / 'Cliente.csv',
+                    delimiter=';',
+                    encoding='utf-8'
+                )
+            except Exception as e:
+                raise ValueError(f"❌ Erro ao ler Cliente.csv: {str(e)}\n\n💡 Verifique se o arquivo está no formato correto (separado por ponto-e-vírgula).")
+
+            try:
+                self.produtos = pd.read_csv(
+                    self.data_dir / 'produtos.csv',
+                    delimiter=';',
+                    encoding='utf-8'
+                )
+            except Exception as e:
+                raise ValueError(f"❌ Erro ao ler produtos.csv: {str(e)}\n\n💡 Verifique se o arquivo está no formato correto (separado por ponto-e-vírgula).")
+
+            try:
+                self.compras = pd.read_csv(
+                    self.data_dir / 'Compras.csv',
+                    delimiter=';',
+                    encoding='utf-8'
+                )
+            except Exception as e:
+                raise ValueError(f"❌ Erro ao ler Compras.csv: {str(e)}\n\n💡 Verifique se o arquivo está no formato correto (separado por ponto-e-vírgula).")
+
+            logger.info(f"✅ Clientes carregados: {len(self.clientes)} registros")
+            logger.info(f"✅ Produtos carregados: {len(self.produtos)} registros")
+            logger.info(f"✅ Compras carregadas: {len(self.compras)} registros")
 
             return self.clientes, self.produtos, self.compras
 
-        except Exception as e:
-            logger.error(f"Erro ao carregar dados: {e}")
+        except (FileNotFoundError, ValueError):
             raise
+        except Exception as e:
+            mensagem_erro = (
+                f"❌ Erro inesperado ao carregar os dados: {str(e)}\n\n"
+                f"💡 Entre em contato com o suporte técnico se o problema persistir."
+            )
+            logger.error(mensagem_erro)
+            raise Exception(mensagem_erro)
 
     def validate_data(self) -> bool:
         """

@@ -1,17 +1,64 @@
 # Sistema de Análise de Dados - Adega
 
+**Versão 1.0 - ✅ Pronto para Produção**
+
 Sistema robusto e completo de análise de dados e machine learning para uma adega, com foco em previsão de cancelamento de assinaturas e análise de comportamento de clientes.
+
+---
+
+## 🚀 Início Rápido para Produção
+
+### Instalação em 3 Passos
+
+```bash
+# 1. Criar ambiente virtual
+python -m venv venv
+
+# 2. Ativar ambiente (Windows)
+venv\Scripts\activate
+
+# 3. Instalar dependências
+pip install -r requirements.txt
+```
+
+### Iniciar o Sistema
+
+**Windows:**
+```bash
+iniciar_sistema.bat
+```
+
+**Linux/Mac:**
+```bash
+source venv/bin/activate
+streamlit run app.py
+```
+
+**Dashboard disponível em:** `http://localhost:8501`
+
+📖 **Guia Completo de Deploy:** [DEPLOY.md](DEPLOY.md)
+
+---
 
 ## Características Principais
 
 - **🌐 Dashboard Web Interativo** com Streamlit para visualização em tempo real
-- **Análise Exploratória de Dados (EDA)** completa e automatizada
-- **Feature Engineering** avançado com criação de features temporais, agregadas e de interação
-- **Treinamento de múltiplos modelos** de ML com validação cruzada
-- **Avaliação detalhada** com métricas abrangentes (Accuracy, Precision, Recall, F1, ROC-AUC)
-- **Visualizações profissionais** de dados de negócio e métricas de modelo
-- **Sistema de logging** completo para rastreamento
-- **Arquitetura modular** e escalável
+- **📊 Análise Exploratória de Dados** completa e automatizada
+- **🤖 Inteligência Artificial** - 7 modelos de ML com validação cruzada
+- **🔮 Previsões em Tempo Real** - Cancelamentos, vendas, recomendações
+- **📈 Visualizações Profissionais** de dados de negócio e métricas
+- **💡 Interface Amigável** - Otimizada para usuários não-técnicos
+- **❓ Sistema de Ajuda Integrado** - FAQ, glossário e guias
+- **⚙️ Arquitetura Modular** e escalável
+
+### 🎯 Otimizado para Produção
+
+- ✅ **Linguagem Simplificada** - Sem jargões técnicos
+- ✅ **Mensagens Claras** - Erros explicam o que fazer
+- ✅ **Tooltips Explicativos** - Ajuda contextual em todos os campos
+- ✅ **Glossário Integrado** - Tradução de termos técnicos
+- ✅ **Guias Passo-a-Passo** - Usuário consegue usar sozinho
+- ✅ **Deploy Simplificado** - Script de inicialização automático
 
 ## Estrutura do Projeto
 
@@ -292,4 +339,4 @@ Projeto educacional - Livre para uso e modificação
 
 ## Autor
 
-Sistema desenvolvido para análise de dados de adega com foco em previsão de churn de clientes.
+Sistema desenvolvido para análise de dados de adega com foco em previsão de cancelamento de assinaturas.

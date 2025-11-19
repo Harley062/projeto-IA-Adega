@@ -380,7 +380,7 @@ class SalesPredictor:
     def __init__(self):
         self.historical_data = None
 
-    def load_historical_data(self, data_path: str = "."):
+    def load_historical_data(self, data_path: str = "data"):
         """Carrega dados históricos para análise de tendências"""
         from data.data_loader import DataLoader
 
@@ -408,10 +408,24 @@ class SalesPredictor:
         ]
 
         if len(customer_purchases) == 0:
-            return {
-                'error': 'Cliente não encontrado',
-                'customer_id': customer_id
-            }
+            # Verificar se o cliente existe no cadastro
+            from data.data_loader import DataLoader
+            loader = DataLoader(data_dir="data")
+            clientes, _, _ = loader.load_data()
+
+            if customer_id in clientes['cliente_id'].values:
+                return {
+                    'error': f'Cliente #{customer_id} existe no cadastro, mas não possui histórico de compras. Para fazer previsões, o cliente precisa ter feito pelo menos uma compra.',
+                    'customer_id': customer_id,
+                    'suggestion': 'Tente com um cliente que já tenha realizado compras (exemplo: ID 5, 7, 8, 10, etc.)'
+                }
+            else:
+                return {
+                    'error': f'Cliente #{customer_id} não encontrado no sistema.',
+                    'customer_id': customer_id,
+                    'suggestion': 'Verifique se o ID está correto.'
+                }
+
 
         # Calcular estatísticas
         avg_value = customer_purchases['valor'].mean()
@@ -503,7 +517,7 @@ class ProductRecommender:
     def __init__(self):
         self.historical_data = None
 
-    def load_historical_data(self, data_path: str = "."):
+    def load_historical_data(self, data_path: str = "data"):
         """Carrega dados históricos"""
         from data.data_loader import DataLoader
 

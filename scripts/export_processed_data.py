@@ -4,8 +4,8 @@ Script para exportar a base de dados tratada usada no treinamento
 import sys
 from pathlib import Path
 
-# Adicionar src ao path
-sys.path.append(str(Path(__file__).parent / 'src'))
+# Adicionar src ao path (script está em scripts/, src está na raiz)
+sys.path.append(str(Path(__file__).parent.parent / 'src'))
 
 import pandas as pd
 import numpy as np
@@ -30,7 +30,7 @@ def export_processed_data():
 
     # 1. CARREGAR DADOS BRUTOS
     logger.info("\n[1/4] Carregando dados brutos...")
-    data_loader = DataLoader()
+    data_loader = DataLoader(data_dir="data")
     data_loader.load_data()
     data_loader.validate_data()
     data = data_loader.merge_data()
