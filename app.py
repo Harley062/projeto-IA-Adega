@@ -229,6 +229,9 @@ def show_dashboard(data, loader):
 
     with col1:
         st.markdown('<h3><i class="fas fa-chart-bar icon"></i> Distribuição de Vendas</h3>', unsafe_allow_html=True)
+        st.info("**O que significa:** Este gráfico mostra como os valores de compra estão distribuídos. Picos indicam faixas de preço mais comuns.\n\n"
+                "**Insight para negócio:** Use para identificar o ticket médio e criar promoções estratégicas nessas faixas de valor.")
+
         fig = px.histogram(
             data,
             x='valor',
@@ -241,6 +244,9 @@ def show_dashboard(data, loader):
 
     with col2:
         st.markdown('<h3><i class="fas fa-globe icon"></i> Vendas por Cidade</h3>', unsafe_allow_html=True)
+        st.info("**O que significa:** Ranking das 10 cidades que mais geram receita para sua adega.\n\n"
+                "**Insight para negócio:** Concentre investimentos em marketing e logística nas cidades de melhor desempenho. Cidades com baixo volume podem precisar de campanhas específicas.")
+
         city_sales = data.groupby('cidade')['valor'].sum().sort_values(ascending=False).head(10)
         fig = px.bar(
             x=city_sales.values,
@@ -327,39 +333,54 @@ def show_eda():
     with tab1:
         st.subheader("Distribuições de Variáveis")
 
+        st.info("**O que significa:** Mostra como diferentes variáveis estão distribuídas nos seus dados (idade, valores, quantidade, etc).\n\n"
+                "**Insight para negócio:** Identifique padrões de comportamento - ex: se a maioria dos clientes tem 30-40 anos, adapte sua comunicação para esse público.")
+
         col1, col2 = st.columns(2)
 
         with col1:
             img = load_image(plots_dir / "numerical_distributions.png")
             if img:
-                st.image(img, caption="Distribuições Numéricas", use_column_width=True)
+                st.image(img, caption="Distribuições Numéricas - Valores, idades, quantidades", use_column_width=True)
 
         with col2:
             img = load_image(plots_dir / "categorical_distributions.png")
             if img:
-                st.image(img, caption="Distribuições Categóricas", use_column_width=True)
+                st.image(img, caption="Distribuições Categóricas - Cidades, tipos de vinho, assinantes", use_column_width=True)
 
     with tab2:
         st.subheader("Matriz de Correlação")
+
+        st.info("**O que significa:** Mostra quais variáveis estão relacionadas entre si. Valores próximos de 1 (vermelho) = forte relação positiva, próximos de -1 (azul) = relação negativa.\n\n"
+                "**Insight para negócio:** Descubra o que influencia as vendas. Ex: se 'pontuação de engajamento' tem alta correlação com 'valor de compra', invista em engajamento!")
+
         img = load_image(plots_dir / "correlation_matrix.png")
         if img:
-            st.image(img, caption="Correlação entre Variáveis", use_column_width=True)
+            st.image(img, caption="Correlação entre Variáveis - Identifique relações importantes", use_column_width=True)
         else:
             st.info("Matriz de correlação não disponível")
 
     with tab3:
         st.subheader("Detecção de Outliers")
+
+        st.info("**O que significa:** Boxplots mostram valores atípicos (pontos fora das 'caixas'). Esses são clientes ou vendas muito diferentes do padrão.\n\n"
+                "**Insight para negócio:** Outliers podem ser VIPs (gastam muito mais) ou oportunidades perdidas (gastam muito menos). Analise ambos!")
+
         img = load_image(plots_dir / "boxplots.png")
         if img:
-            st.image(img, caption="Boxplots para Detecção de Outliers", use_column_width=True)
+            st.image(img, caption="Boxplots - Pontos fora das caixas são valores atípicos", use_column_width=True)
         else:
             st.info("Boxplots não disponíveis")
 
     with tab4:
         st.subheader("Análise Temporal de Vendas")
+
+        st.info("**O que significa:** Mostra como suas vendas evoluem ao longo do tempo - tendências, sazonalidades e padrões.\n\n"
+                "**Insight para negócio:** Identifique meses de alta/baixa, planeje estoque e promoções. Aproveite períodos de pico e crie estratégias para períodos fracos!")
+
         img = load_image(plots_dir / "sales_over_time.png")
         if img:
-            st.image(img, caption="Vendas ao Longo do Tempo", use_column_width=True)
+            st.image(img, caption="Vendas ao Longo do Tempo - Identifique sazonalidade e tendências", use_column_width=True)
         else:
             st.info("Análise temporal não disponível")
 
@@ -384,6 +405,25 @@ def show_models():
     with tab1:
         st.subheader("Performance do Modelo")
 
+        st.info("**O que é isso:** O modelo foi treinado para prever se um cliente vai cancelar a assinatura (churn) ou continuar comprando.\n\n"
+                "**Para que serve:** Identificar clientes em risco ANTES que eles cancelem, permitindo ações preventivas de retenção!")
+
+        # Explicação das métricas
+        with st.expander("📚 Entenda as Métricas do Modelo"):
+            st.markdown("""
+            **Accuracy (Acurácia):** % de previsões corretas no geral. Ex: 85% = acertou 85 de cada 100 previsões.
+
+            **Precision (Precisão):** Quando o modelo diz que um cliente vai cancelar, qual a chance de estar certo? Alta precisão = menos alarmes falsos.
+
+            **Recall (Sensibilidade):** De todos os clientes que realmente cancelaram, quantos o modelo identificou? Alto recall = pega mais casos reais.
+
+            **F1-Score:** Equilíbrio entre Precision e Recall. Quanto maior, melhor o modelo como um todo.
+
+            **ROC-AUC:** Mede a capacidade do modelo de distinguir entre quem cancela e quem não cancela. Quanto mais próximo de 1, melhor!
+
+            💡 **Para seu negócio:** Um modelo com alto Recall é importante porque você NÃO quer perder nenhum cliente em risco!
+            """)
+
         # Carregar relatório
         if report_path.exists():
             with open(report_path, 'r', encoding='utf-8') as f:
@@ -399,22 +439,36 @@ def show_models():
         plots_dir = Path("output/plots")
 
         with col1:
+            st.markdown("##### Matriz de Confusão")
+            st.caption("**O que mostra:** Compara previsões vs realidade. Diagonal = acertos, resto = erros.")
             img = load_image(plots_dir / "confusion_matrix.png")
             if img:
-                st.image(img, caption="Matriz de Confusão", use_column_width=True)
+                st.image(img, use_column_width=True)
+                st.success("✅ Verde na diagonal = modelo está acertando!")
 
+            st.divider()
+
+            st.markdown("##### Comparação de Modelos")
+            st.caption("**O que mostra:** Ranking dos melhores modelos testados. O topo é o vencedor!")
             img = load_image(plots_dir / "model_comparison.png")
             if img:
-                st.image(img, caption="Comparação de Modelos", use_column_width=True)
+                st.image(img, use_column_width=True)
 
         with col2:
+            st.markdown("##### Curva ROC")
+            st.caption("**O que mostra:** Quanto mais próxima do canto superior esquerdo, melhor o modelo.")
             img = load_image(plots_dir / "roc_curve.png")
             if img:
-                st.image(img, caption="Curva ROC", use_column_width=True)
+                st.image(img, use_column_width=True)
+                st.info("📊 Área abaixo da curva (AUC) próxima de 1 = excelente!")
 
+            st.divider()
+
+            st.markdown("##### Curva Precision-Recall")
+            st.caption("**O que mostra:** Equilíbrio entre não perder clientes em risco e evitar alarmes falsos.")
             img = load_image(plots_dir / "precision_recall_curve.png")
             if img:
-                st.image(img, caption="Curva Precision-Recall", use_column_width=True)
+                st.image(img, use_column_width=True)
 
     with tab2:
         st.markdown('<h3><i class="fas fa-bullseye icon"></i> Sistema Preditivo Completo</h3>', unsafe_allow_html=True)
@@ -446,9 +500,13 @@ def show_models():
     with tab3:
         st.subheader("🔍 Análise de Features")
 
+        st.info("**O que significa:** Mostra quais fatores mais influenciam o cancelamento de assinatura.\n\n"
+                "**Insight para negócio:** Foque nos fatores mais importantes! Se 'pontuação de engajamento' está no topo, invista em manter clientes engajados.")
+
         img = load_image(Path("output/plots") / "feature_importance.png")
         if img:
-            st.image(img, caption="Importância das Features", use_column_width=True)
+            st.image(img, caption="Importância das Features - Os fatores que mais preveem cancelamento", use_column_width=True)
+            st.success("💡 As barras maiores são os fatores mais importantes para evitar churn!")
         else:
             st.info("Análise de features não disponível")
 
@@ -471,24 +529,32 @@ def show_business_insights(data):
     with tab1:
         st.subheader("Análise de Produtos")
 
+        st.info("**O que significa:** Mostra quais produtos vendem mais e as características dos vinhos preferidos.\n\n"
+                "**Ação recomendada:** Garanta estoque dos top produtos, crie combos/kits, e faça promoções cruzadas!")
+
         col1, col2 = st.columns(2)
 
         with col1:
             img = load_image(plots_dir / "top_products.png")
             if img:
-                st.image(img, caption="Top Produtos", use_column_width=True)
+                st.image(img, caption="Top Produtos - Mantenha sempre em estoque!", use_column_width=True)
+                st.warning("⚠️ **Risco:** Falta de estoque dos top produtos = perda de vendas")
 
         with col2:
             img = load_image(plots_dir / "wine_analysis.png")
             if img:
-                st.image(img, caption="Análise de Vinhos", use_column_width=True)
+                st.image(img, caption="Análise de Vinhos - Preferências dos clientes", use_column_width=True)
+                st.success("💡 **Oportunidade:** Diversifique na categoria mais vendida")
 
     with tab2:
         st.subheader("Segmentação de Clientes")
 
+        st.info("**O que significa:** Divide seus clientes em grupos com comportamentos similares.\n\n"
+                "**Ação recomendada:** Crie campanhas personalizadas para cada segmento - mensagens diferentes para públicos diferentes!")
+
         img = load_image(plots_dir / "customer_segmentation.png")
         if img:
-            st.image(img, caption="Segmentação por Cidade e Comportamento", use_column_width=True)
+            st.image(img, caption="Segmentação - Cada grupo precisa de uma estratégia diferente", use_column_width=True)
 
         # Métricas por segmento
         st.divider()
@@ -503,6 +569,10 @@ def show_business_insights(data):
                 f"{len(assinantes)} clientes",
                 f"R$ {assinantes['valor'].sum():,.2f} em vendas"
             )
+            if len(assinantes) > 0:
+                avg_assinante = assinantes['valor'].mean()
+                st.caption(f"Ticket médio: R$ {avg_assinante:.2f}")
+                st.success("✅ **Estratégia:** Mantenha benefícios exclusivos e engajamento alto!")
 
         with col2:
             nao_assinantes = data[data['assinante_clube'] == 'Não']
@@ -511,52 +581,271 @@ def show_business_insights(data):
                 f"{len(nao_assinantes)} clientes",
                 f"R$ {nao_assinantes['valor'].sum():,.2f} em vendas"
             )
+            if len(nao_assinantes) > 0:
+                avg_nao_assinante = nao_assinantes['valor'].mean()
+                st.caption(f"Ticket médio: R$ {avg_nao_assinante:.2f}")
+                st.warning("⚠️ **Oportunidade:** Converta para assinantes com trial gratuito!")
 
     with tab3:
         st.subheader("Análise RFM (Recency, Frequency, Monetary)")
 
+        st.info("""
+        **O que é RFM:** Classificação de clientes baseada em 3 fatores:
+        - **Recency (Recência):** Há quanto tempo o cliente comprou pela última vez
+        - **Frequency (Frequência):** Quantas vezes o cliente compra
+        - **Monetary (Monetário):** Quanto dinheiro o cliente gasta
+
+        **Para que serve:** Identifica seus melhores clientes (VIPs), clientes em risco e oportunidades!
+        """)
+
         img = load_image(plots_dir / "rfm_analysis.png")
         if img:
-            st.image(img, caption="Análise RFM", use_column_width=True)
+            st.image(img, caption="Análise RFM - Segmentação por valor e comportamento", use_column_width=True)
 
-        st.info("""
-        **RFM Analysis:**
-        - **Recency**: Quão recentemente o cliente comprou
-        - **Frequency**: Com que frequência o cliente compra
-        - **Monetary**: Quanto o cliente gasta
+        st.markdown("""
+        ### 🎯 Como usar o RFM no seu negócio:
+
+        **Champions (RFM Alto):** 🏆
+        - São seus melhores clientes
+        - **Ação:** Recompense com benefícios VIP, acesso antecipado a novos vinhos
+
+        **At Risk (Monetary alto, Recency baixa):** ⚠️
+        - Clientes valiosos que não compram há tempo
+        - **Ação:** Campanha urgente de reativação com desconto especial
+
+        **Lost (RFM Baixo):** 😢
+        - Clientes perdidos
+        - **Ação:** Pesquisa de satisfação, ofertas de "última chance"
+
+        **Promising (Frequency baixa, Monetary crescente):** 🌱
+        - Novos clientes com potencial
+        - **Ação:** Nurturing, programa de fidelidade, conteúdo educativo sobre vinhos
         """)
 
     with tab4:
-        st.subheader("💡 Recomendações Estratégicas")
+        st.subheader("💡 Recomendações Estratégicas Acionáveis")
 
-        # Calcular insights
+        # Calcular insights detalhados
         churn_rate = (data['cancelou_assinatura'] == 'Sim').sum() / len(data) * 100
+        churn_count = (data['cancelou_assinatura'] == 'Sim').sum()
         avg_ticket = data['valor'].mean()
         top_city = data.groupby('cidade')['valor'].sum().idxmax()
+        top_city_revenue = data.groupby('cidade')['valor'].sum().max()
 
-        st.markdown(f"""
-        ### 📊 Principais Insights
+        # Análise de produtos
+        if 'produto_id' in data.columns:
+            top_products = data.groupby('produto_id')['quantidade'].sum().nlargest(3)
 
-        1. **Taxa de Churn**: {churn_rate:.1f}%
-           - {(data['cancelou_assinatura'] == 'Sim').sum()} clientes cancelaram assinatura
-           - **Ação**: Implementar campanha de retenção direcionada
+        # Análise de assinantes
+        assinantes_count = (data['assinante_clube'] == 'Sim').sum()
+        assinantes_revenue = data[data['assinante_clube'] == 'Sim']['valor'].sum()
+        total_revenue = data['valor'].sum()
+        assinante_contribution = (assinantes_revenue / total_revenue * 100) if total_revenue > 0 else 0
 
-        2. **Ticket Médio**: R$ {avg_ticket:.2f}
-           - **Ação**: Oportunidade de upsell e cross-sell
+        # Painel de Alertas
+        st.markdown("### 🚨 Alertas e Riscos Imediatos")
 
-        3. **Melhor Mercado**: {top_city}
-           - **Ação**: Replicar estratégias de sucesso em outras cidades
+        col1, col2 = st.columns(2)
 
-        4. **Vinhos Mais Vendidos**
-           - **Ação**: Otimizar estoque dos produtos top
+        with col1:
+            if churn_rate > 15:
+                st.error(f"**⚠️ ALERTA CRÍTICO: Taxa de Churn Alta ({churn_rate:.1f}%)**")
+                st.markdown(f"""
+                **Situação:** {churn_count} clientes cancelaram a assinatura.
 
-        ### 🎯 Próximas Ações Recomendadas
+                **Ações URGENTES:**
+                1. 📞 Entre em contato com os clientes que cancelaram nas últimas 2 semanas
+                2. 🎁 Ofereça desconto de recuperação (15-20% off)
+                3. 📧 Envie pesquisa de satisfação para entender os motivos
+                4. 🔍 Use o modelo preditivo para identificar próximos em risco
+                """)
+            else:
+                st.success(f"**✅ Taxa de Churn Controlada ({churn_rate:.1f}%)**")
+                st.markdown("Continue monitorando semanalmente.")
 
-        - ✅ Criar campanha de retenção para clientes em risco
-        - ✅ Implementar programa de fidelidade robusto
-        - ✅ Desenvolver estratégia de marketing para {top_city}
-        - ✅ Analisar feedback de clientes que cancelaram
-        """)
+        with col2:
+            if assinante_contribution < 40:
+                st.warning(f"**⚠️ OPORTUNIDADE: Clube de Assinantes ({assinante_contribution:.1f}% da receita)**")
+                st.markdown(f"""
+                **Situação:** Apenas {assinantes_count} assinantes gerando {assinante_contribution:.1f}% da receita.
+
+                **Ações RECOMENDADAS:**
+                1. 🎯 Campanha de conversão para não-assinantes
+                2. 🆓 Ofereça 1º mês grátis no clube
+                3. 🎁 Crie benefícios exclusivos (frete grátis, degustações)
+                4. 💰 Meta: Dobrar número de assinantes em 3 meses
+                """)
+            else:
+                st.success(f"**✅ Clube de Assinantes Forte ({assinante_contribution:.1f}% da receita)**")
+
+        st.divider()
+
+        # Oportunidades de Crescimento
+        st.markdown("### 🚀 Oportunidades de Crescimento")
+
+        tab_promo, tab_expansao, tab_produto, tab_retencao = st.tabs([
+            "📢 Promoções", "🌎 Expansão", "📦 Mix de Produtos", "🔒 Retenção"
+        ])
+
+        with tab_promo:
+            st.markdown(f"""
+            #### Quando e Como Fazer Promoções
+
+            **1. Promoção de Ticket Médio (Atual: R$ {avg_ticket:.2f})**
+            - **Quando:** Quinzenalmente
+            - **Como:** "Compre 2, leve 3" ou desconto progressivo (5% acima de R$100, 10% acima de R$200)
+            - **Objetivo:** Aumentar ticket médio em 20%
+
+            **2. Promoção de Reativação**
+            - **Quando:** Mensalmente para clientes inativos há mais de 60 dias
+            - **Como:** Email com cupom de 15% + frete grátis
+            - **Objetivo:** Recuperar 25% dos inativos
+
+            **3. Promoção Sazonal**
+            - **Quando:** Datas comemorativas (Dia dos Pais, Natal, Black Friday)
+            - **Como:** Kits temáticos com 20-30% off
+            - **Objetivo:** Aumentar volume de vendas em 50% no período
+
+            **4. Flash Sale**
+            - **Quando:** Sexta-feira, 18h-22h
+            - **Como:** Produto selecionado com 40% off (estoque limitado)
+            - **Objetivo:** Criar urgência e engajamento
+            """)
+
+        with tab_expansao:
+            st.markdown(f"""
+            #### Estratégia de Expansão Geográfica
+
+            **Seu Melhor Mercado Atual: {top_city} (R$ {top_city_revenue:,.2f})**
+
+            **Plano de Expansão:**
+
+            **1. Fase 1 - Consolidar {top_city} (Mês 1-2)**
+            - Aumentar investimento em marketing local
+            - Parcerias com restaurantes locais
+            - Meta: +30% de crescimento
+
+            **2. Fase 2 - Replicar Sucesso (Mês 3-4)**
+            - Identificar cidades similares demograficamente
+            - Aplicar mesmas estratégias que funcionaram em {top_city}
+            - Teste em 2-3 cidades novas
+
+            **3. Fase 3 - Expansão Digital (Mês 5-6)**
+            - Investir em ads geolocalizados
+            - Criar programa de indicação
+            - Expandir para 5 novas cidades
+
+            **Cidades com Baixo Desempenho:**
+            - Faça pesquisa local para entender barreiras
+            - Considere parcerias com distribuidores locais
+            - Ofereça frete grátis como teste por 30 dias
+            """)
+
+        with tab_produto:
+            st.markdown(f"""
+            #### Otimização de Mix de Produtos
+
+            **Análise Atual:**
+            - Identifique os Top 10 produtos (use a aba "Análise de Produtos")
+            - Analise margem de lucro vs volume de vendas
+
+            **Estratégias:**
+
+            **1. Produtos "Estrela" (Alto volume, Alta margem)** ⭐
+            - **Ação:** NUNCA deixe faltar estoque
+            - **Promoção:** Use como "isca" em combos
+            - **Exposição:** Destaque na home do site/loja
+
+            **2. Produtos "Vaca Leiteira" (Alto volume, Baixa margem)** 🐄
+            - **Ação:** Mantenha estoque, mas venda em combo com produtos de alta margem
+            - **Exemplo:** "Compre vinho popular + vinho premium com 15% off"
+
+            **3. Produtos "Oportunidade" (Baixo volume, Alta margem)** 💎
+            - **Ação:** Invista em marketing educativo
+            - **Exemplo:** Degustações, vídeos sobre harmonização
+            - **Posicionamento:** Vinhos "premium" ou "exclusivos"
+
+            **4. Produtos "Peso Morto" (Baixo volume, Baixa margem)** ⚠️
+            - **Ação:** Liquidar em promoção relâmpago
+            - **Decisão:** Substituir por produtos melhores
+
+            **Novos Produtos:**
+            - Analise produtos similares aos best-sellers
+            - Teste em pequena escala (50-100 unidades)
+            - Colete feedback antes de comprar estoque grande
+            """)
+
+        with tab_retencao:
+            st.markdown(f"""
+            #### Programa de Retenção Anti-Churn
+
+            **Seu Desafio: {churn_count} clientes já cancelaram ({churn_rate:.1f}%)**
+
+            **Sistema de 3 Camadas:**
+
+            **1. Prevenção (ANTES do cliente pensar em sair)** 🛡️
+            - **Semana 1-2:** Email de boas-vindas + guia de vinhos
+            - **Mês 1:** Pesquisa de satisfação + cupom de surpresa
+            - **Mês 2-3:** Programa de pontos/cashback
+            - **Trimestral:** Benefício exclusivo (degustação VIP, lançamentos antecipados)
+
+            **2. Detecção Precoce (Sinais de risco)** 🔍
+            - **Use o modelo preditivo semanalmente**
+            - Monitore: Queda de engajamento, reclamações, redução de compras
+            - **Ação imediata:** Contato proativo (telefone ou WhatsApp)
+
+            **3. Recuperação (Cliente já cancelou)** 🔄
+            - **Até 7 dias:** Email automático com desconto de 20%
+            - **14 dias:** Ligação pessoal para entender motivo
+            - **30 dias:** "Sentimos sua falta" + oferta irresistível
+            - **90 dias:** Última tentativa com benefício único
+
+            **KPIs para Monitorar:**
+            - Taxa de churn mensal (meta: <10%)
+            - Taxa de recuperação (meta: >30%)
+            - NPS - Net Promoter Score
+            - Tempo médio de vida do cliente (CLV)
+            """)
+
+        st.divider()
+
+        # Checklist Semanal
+        st.markdown("### ✅ Checklist Semanal do Gestor")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("""
+            **Segunda-feira:**
+            - [ ] Revisar vendas da semana anterior
+            - [ ] Executar modelo preditivo de churn
+            - [ ] Contactar top 5 clientes em risco
+
+            **Quarta-feira:**
+            - [ ] Analisar estoque dos top produtos
+            - [ ] Revisar NPS e feedbacks
+            - [ ] Planejar promoção de fim de semana
+            """)
+
+        with col2:
+            st.markdown("""
+            **Sexta-feira:**
+            - [ ] Disparar campanha de promoção
+            - [ ] Analisar performance das campanhas ativas
+            - [ ] Planejar ações da próxima semana
+
+            **Mensal:**
+            - [ ] Análise completa de RFM
+            - [ ] Revisão de mix de produtos
+            - [ ] Planejamento estratégico do próximo mês
+            """)
+
+        st.divider()
+
+        st.success(
+            "💡 **DICA DE OURO:** Use este dashboard toda semana! "
+            "Dados sem ação não geram resultado. Escolha 2-3 ações prioritárias e execute com consistência."
+        )
 
 
 def show_settings():
