@@ -1130,7 +1130,7 @@ def show_business_insights(data):
                 # formatar valores como texto para exibir acima das barras
                 display_q = prod_plot_q['quantidade'].apply(lambda x: f"{int(x):,}")
                 fig_prod_q.add_trace(go.Bar(
-                    x=prod_plot_q['produto_id'].astype(str),
+                    x=prod_plot_q['produto_name'].astype(str),
                     y=prod_plot_q['quantidade'],
                     marker=dict(color=colors_plot_q),
                     text=display_q,
