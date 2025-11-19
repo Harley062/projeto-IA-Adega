@@ -396,15 +396,72 @@ def show_eda():
 
         col1, col2 = st.columns(2)
 
+        # Distribuições numéricas (coluna selecionável)
         with col1:
-            img = load_image(plots_dir / "numerical_distributions.png")
-            if img:
-                st.image(img, caption="Distribuições Numéricas - Valores, idades, quantidades", use_container_width=True)
+            if data_live is not None and not data_live.empty:
+                numeric_cols = data_live.select_dtypes(include=[np.number]).columns.tolist()
+                if numeric_cols:
+                    selected_num = st.selectbox("Escolha variável numérica:", numeric_cols, key='dist_num')
+                    try:
+                        fig = px.histogram(
+                            data_live,
+                            x=selected_num,
+                            nbins=30,
+                            title=f'Distribuição de {selected_num}',
+                            labels={selected_num: selected_num, 'count': 'Frequência'},
+                            color_discrete_sequence=['#722F37']
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Erro ao gerar histograma: {e}")
+                else:
+                    img = load_image(plots_dir / "numerical_distributions.png")
+                    if img:
+                        st.image(img, caption="Distribuições Numéricas - Valores, idades, quantidades", use_container_width=True)
+                    else:
+                        st.info("Nenhuma coluna numérica disponível para visualizar distribuições.")
+            else:
+                img = load_image(plots_dir / "numerical_distributions.png")
+                if img:
+                    st.image(img, caption="Distribuições Numéricas - Valores, idades, quantidades", use_container_width=True)
+                else:
+                    st.info("Distribuições numéricas não disponíveis")
 
+        # Distribuições categóricas (coluna selecionável)
         with col2:
-            img = load_image(plots_dir / "categorical_distributions.png")
-            if img:
-                st.image(img, caption="Distribuições Categóricas - Cidades, tipos de vinho, assinantes", use_container_width=True)
+            if data_live is not None and not data_live.empty:
+                cat_cols = data_live.select_dtypes(include=['object', 'category', 'bool']).columns.tolist()
+                # filtrar colunas com cardinalidade muito alta
+                cat_cols = [c for c in cat_cols if data_live[c].nunique() <= 50]
+                if cat_cols:
+                    selected_cat = st.selectbox("Escolha variável categórica:", cat_cols, key='dist_cat')
+                    try:
+                        counts = data_live[selected_cat].value_counts().nlargest(20).reset_index()
+                        counts.columns = [selected_cat, 'count']
+                        fig = px.bar(
+                            counts,
+                            x='count',
+                            y=selected_cat,
+                            orientation='h',
+                            title=f'Distribuição de {selected_cat}',
+                            labels={'count': 'Contagem', selected_cat: selected_cat},
+                            color_discrete_sequence=['#8B4513']
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Erro ao gerar gráfico categórico: {e}")
+                else:
+                    img = load_image(plots_dir / "categorical_distributions.png")
+                    if img:
+                        st.image(img, caption="Distribuições Categóricas - Cidades, tipos de vinho, assinantes", use_container_width=True)
+                    else:
+                        st.info("Nenhuma coluna categórica adequada para visualização encontrada.")
+            else:
+                img = load_image(plots_dir / "categorical_distributions.png")
+                if img:
+                    st.image(img, caption="Distribuições Categóricas - Cidades, tipos de vinho, assinantes", use_container_width=True)
+                else:
+                    st.info("Distribuições categóricas não disponíveis")
 
     with tab2:
         st.subheader("Matriz de Correlação")
@@ -412,11 +469,34 @@ def show_eda():
         st.info("**O que significa:** Mostra quais variáveis estão relacionadas entre si. Valores próximos de 1 (vermelho) = forte relação positiva, próximos de -1 (azul) = relação negativa.\n\n"
                 "**Insight para negócio:** Descubra o que influencia as vendas. Ex: se 'pontuação de engajamento' tem alta correlação com 'valor de compra', invista em engajamento!")
 
-        img = load_image(plots_dir / "correlation_matrix.png")
-        if img:
-            st.image(img, caption="Correlação entre Variáveis - Identifique relações importantes", use_container_width=True)
+        # Gerar matriz de correlação dinamicamente quando possível
+        if data_live is not None and not data_live.empty:
+            numeric_cols = data_live.select_dtypes(include=[np.number]).columns.tolist()
+            if numeric_cols and len(numeric_cols) > 1:
+                try:
+                    corr = data_live[numeric_cols].corr()
+                    fig = px.imshow(
+                        corr,
+                        text_auto=True,
+                        aspect='auto',
+                        color_continuous_scale='RdBu_r',
+                        title='Matriz de Correlação'
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                except Exception as e:
+                    st.error(f"Erro ao gerar matriz de correlação: {e}")
+            else:
+                img = load_image(plots_dir / "correlation_matrix.png")
+                if img:
+                    st.image(img, caption="Correlação entre Variáveis - Identifique relações importantes", use_container_width=True)
+                else:
+                    st.info("Não há correlações suficientes para exibir (poucas colunas numéricas).")
         else:
-            st.info("Matriz de correlação não disponível")
+            img = load_image(plots_dir / "correlation_matrix.png")
+            if img:
+                st.image(img, caption="Correlação entre Variáveis - Identifique relações importantes", use_container_width=True)
+            else:
+                st.info("Matriz de correlação não disponível")
 
     with tab3:
         st.subheader("Detecção de Outliers")
