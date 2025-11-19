@@ -112,11 +112,11 @@ def main():
     """Função principal do dashboard"""
 
     # Header com logo
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        logo = load_image("assets/adega.png")
-        if logo:
-            st.image(logo, width=200)
+    # col1, col2, col3 = st.columns([1, 2, 1])
+    # with col2:
+        # logo = load_image("assets/adega.png")
+        # if logo:
+        #     st.image(logo, width=200)
         # st.markdown('<h1 class="main-header">Adega Bom Sabor</h1>', unsafe_allow_html=True)
 
     # Sidebar
@@ -409,8 +409,15 @@ def show_eda():
                             nbins=30,
                             title=f'Distribuição de {selected_num}',
                             labels={selected_num: selected_num, 'count': 'Frequência'},
-                            color_discrete_sequence=['#722F37']
+                            marginal='box',
+                            color_discrete_sequence=['#722F37'],
+                            template='plotly_white'
                         )
+                        fig.update_traces(marker_line_width=0.5)
+                        # formatar eixo de valores como moeda quando aplicável
+                        if selected_num.lower() == 'valor':
+                            fig.update_yaxes(title_text='Frequência')
+                            fig.update_xaxes(tickformat=",.2f")
                         st.plotly_chart(fig, use_container_width=True)
                     except Exception as e:
                         st.error(f"Erro ao gerar histograma: {e}")
@@ -438,6 +445,7 @@ def show_eda():
                     try:
                         counts = data_live[selected_cat].value_counts().nlargest(20).reset_index()
                         counts.columns = [selected_cat, 'count']
+                        counts['percent'] = counts['count'] / counts['count'].sum() * 100
                         fig = px.bar(
                             counts,
                             x='count',
@@ -445,8 +453,11 @@ def show_eda():
                             orientation='h',
                             title=f'Distribuição de {selected_cat}',
                             labels={'count': 'Contagem', selected_cat: selected_cat},
-                            color_discrete_sequence=['#8B4513']
+                            color_discrete_sequence=['#8B4513'],
+                            template='plotly_white',
+                            hover_data={'count': True, 'percent': ':.1f'}
                         )
+                        fig.update_traces(hovertemplate='%{y}: %{x} (%{customdata[1]:.1f}%)')
                         st.plotly_chart(fig, use_container_width=True)
                     except Exception as e:
                         st.error(f"Erro ao gerar gráfico categórico: {e}")
@@ -480,8 +491,10 @@ def show_eda():
                         text_auto=True,
                         aspect='auto',
                         color_continuous_scale='RdBu_r',
-                        title='Matriz de Correlação'
+                        title='Matriz de Correlação',
+                        template='plotly_white'
                     )
+                    fig.update_layout(margin=dict(l=40, r=40, t=60, b=40))
                     st.plotly_chart(fig, use_container_width=True)
                 except Exception as e:
                     st.error(f"Erro ao gerar matriz de correlação: {e}")
@@ -675,19 +688,123 @@ def show_business_insights(data):
         st.info("**O que significa:** Mostra quais produtos vendem mais e as características dos vinhos preferidos.\n\n"
                 "**Ação recomendada:** Garanta estoque dos top produtos, crie combos/kits, e faça promoções cruzadas!")
 
-        col1, col2 = st.columns(2)
-
-        with col1:
+        # Seletor de métrica e top-N
+        metric_options = [c for c in ['valor', 'quantidade'] if c in data.columns]
+        if not metric_options:
             img = load_image(plots_dir / "top_products.png")
             if img:
                 st.image(img, caption="Top Produtos - Mantenha sempre em estoque!", use_container_width=True)
-                st.warning("⚠️ **Risco:** Falta de estoque dos top produtos = perda de vendas")
+            else:
+                st.info("Não há colunas de produto/valor/quantidade disponíveis para análise de produtos.")
+        else:
+            metric = st.selectbox("Métrica para ranking", metric_options)
+            top_n = st.slider("Top N produtos", 5, 30, 10)
 
-        with col2:
-            img = load_image(plots_dir / "wine_analysis.png")
-            if img:
-                st.image(img, caption="Análise de Vinhos - Preferências dos clientes", use_container_width=True)
-                st.success("💡 **Oportunidade:** Diversifique na categoria mais vendida")
+            try:
+                # Agregar e preparar tabela de ranking
+                prod_df = data.groupby('produto_id')[metric].sum().reset_index()
+                # tentar encontrar coluna de nome do produto no DataFrame
+                name_col = None
+                for cand in ['nome_produto', 'nome', 'produto_nome', 'nome_do_produto', 'nome_produto_prod']:
+                    if cand in data.columns:
+                        name_col = cand
+                        break
+                if name_col:
+                    # construir mapeamento id -> nome
+                    prod_names = data.dropna(subset=['produto_id', name_col]).drop_duplicates('produto_id').set_index('produto_id')[name_col].to_dict()
+                    prod_df['produto_name'] = prod_df['produto_id'].map(prod_names)
+                    # fallback para id como string quando nome ausente
+                    prod_df['produto_name'] = prod_df['produto_name'].fillna(prod_df['produto_id'].astype(str))
+                else:
+                    prod_df['produto_name'] = prod_df['produto_id'].astype(str)
+                prod_df = prod_df.sort_values(by=metric, ascending=False).head(top_n).reset_index(drop=True)
+                total_metric = prod_df[metric].sum() if prod_df[metric].sum() > 0 else 1
+                prod_df['percent'] = prod_df[metric] / total_metric * 100
+                prod_df['cum_percent'] = prod_df['percent'].cumsum()
+                prod_df['rank'] = prod_df.index + 1
+
+                # Cores para top-3 (medalhas) e cor padrão para os demais
+                def rank_color(r):
+                    if r == 1:
+                        return '#D4AF37'  # ouro
+                    if r == 2:
+                        return '#C0C0C0'  # prata
+                    if r == 3:
+                        return '#CD7F32'  # bronze
+                    return '#8B4513'    # cor padrão (marrom)
+
+                colors = [rank_color(r) for r in prod_df['rank']]
+
+                # Formatação dos valores para exibição (moeda quando aplicável)
+                if metric.lower() == 'valor':
+                    display_vals = prod_df[metric].apply(lambda x: f"R$ {x:,.2f}")
+                else:
+                    display_vals = prod_df[metric].apply(lambda x: f"{int(x):,}")
+
+                # Gráfico vertical (barras em pé) com destaque de ranking
+                # ordenar para que o maior fique à direita
+                prod_plot = prod_df.sort_values(by=metric, ascending=True).reset_index(drop=True)
+                # recriar cores na ordem do plot
+                colors_plot = [rank_color(r) for r in prod_plot['rank']]
+
+                # Formatar valores para exibição no texto de anotações na ordem do plot
+                if metric.lower() == 'valor':
+                    display_vals_plot = prod_plot[metric].apply(lambda x: f"R$ {x:,.2f}")
+                else:
+                    display_vals_plot = prod_plot[metric].apply(lambda x: f"{int(x):,}")
+
+                fig_prod = go.Figure()
+                # usar text + textposition='outside' torna os valores posicionados dinamicamente acima das barras
+                fig_prod.add_trace(go.Bar(
+                    x=prod_plot['produto_name'].astype(str),
+                    y=prod_plot[metric],
+                    marker=dict(color=colors_plot),
+                    text=display_vals_plot,
+                    textposition='outside',
+                    textfont=dict(size=11, color='black'),
+                    hovertemplate='Produto: %{x}<br>' + f'{metric}: ' + '%{y:,}<br>Participação: %{customdata[0]:.1f}%<extra></extra>',
+                    customdata=prod_plot[['percent']].values
+                ))
+                fig_prod.update_layout(
+                    title=f'Top {top_n} Produtos por {metric} (Ranking)',
+                    xaxis_title='Produto ID',
+                    yaxis_title=metric,
+                    template='plotly_white',
+                    margin=dict(b=200),
+                    uniformtext_minsize=8,
+                    uniformtext_mode='hide'
+                )
+
+                # Garantir ordem das categorias no eixo X (maior à direita)
+                fig_prod.update_xaxes(categoryorder='array', categoryarray=prod_plot['produto_name'].astype(str).tolist(), tickangle=-45)
+
+                st.plotly_chart(fig_prod, use_container_width=True)
+
+                # Exibir tabela com Rank, Produto, Valor, % e % Acumulada
+                prod_table = prod_df.copy()
+                prod_table['display_value'] = display_vals
+                prod_table['percent'] = prod_table['percent'].round(1)
+                prod_table['cum_percent'] = prod_table['cum_percent'].round(1)
+                # Preferir mostrar o nome do produto em vez do ID
+                if 'produto_name' in prod_table.columns:
+                    prod_table = prod_table[['rank', 'produto_name', 'display_value', 'percent', 'cum_percent']]
+                    prod_table.columns = ['Rank', 'Produto', metric.capitalize(), '% Participação', '% Acumulado']
+                else:
+                    prod_table = prod_table[['rank', 'produto_id', 'display_value', 'percent', 'cum_percent']]
+                    prod_table.columns = ['Rank', 'Produto ID', metric.capitalize(), '% Participação', '% Acumulado']
+                st.dataframe(prod_table, use_container_width=True)
+
+                # Botão para download CSV (opcional)
+                # incluir nome na exportação se disponível
+                csv_df = prod_df.copy()
+                if 'produto_name' in csv_df.columns:
+                    csv_df = csv_df[['rank','produto_id','produto_name', metric, 'percent','cum_percent']]
+                else:
+                    csv_df = csv_df[['rank','produto_id', metric, 'percent','cum_percent']]
+                csv = csv_df.to_csv(index=False).encode('utf-8')
+                st.download_button(label='📥 Baixar ranking (CSV)', data=csv, file_name=f'top_{top_n}_produtos_{metric}.csv', mime='text/csv')
+            except Exception as e:
+                st.info(f"Erro ao gerar análise de produtos: {e}")
 
     with tab2:
         st.subheader("Segmentação de Clientes")
@@ -695,39 +812,80 @@ def show_business_insights(data):
         st.info("**O que significa:** Divide seus clientes em grupos com comportamentos similares.\n\n"
                 "**Ação recomendada:** Crie campanhas personalizadas para cada segmento - mensagens diferentes para públicos diferentes!")
 
-        img = load_image(plots_dir / "customer_segmentation.png")
-        if img:
-            st.image(img, caption="Segmentação - Cada grupo precisa de uma estratégia diferente", use_container_width=True)
+        # Construir RFM básico para segmentação
+        # Detectar coluna de data
+        date_col = None
+        for c in data.columns:
+            if 'data' in c.lower() or 'date' in c.lower():
+                date_col = c
+                break
+        if date_col is None:
+            for c in data.columns:
+                try:
+                    if np.issubdtype(data[c].dtype, np.datetime64):
+                        date_col = c
+                        break
+                except Exception:
+                    continue
 
-        # Métricas por segmento
-        st.divider()
-        st.subheader("Métricas por Segmento")
+        if date_col is None:
+            st.info("Nenhuma coluna de data detectada — não é possível calcular segmentação RFM.")
+        else:
+            df_rfm = data.copy()
+            df_rfm[date_col] = pd.to_datetime(df_rfm[date_col], errors='coerce')
+            ref_date = df_rfm[date_col].max() if not df_rfm[date_col].isna().all() else pd.Timestamp.today()
+            # Agregar por cliente
+            rfm = df_rfm.groupby('cliente_id').agg(
+                recency_date=(date_col, 'max'),
+                frequency=(date_col, 'count'),
+                monetary=('valor', 'sum')
+            ).reset_index()
+            rfm['recency'] = (ref_date - rfm['recency_date']).dt.days
 
-        col1, col2 = st.columns(2)
+            # Pontuações R,F,M (1-4)
+            try:
+                rfm['r_score'] = pd.qcut(rfm['recency'], 4, labels=[4,3,2,1]).astype(int)
+            except Exception:
+                rfm['r_score'] = pd.cut(rfm['recency'], bins=4, labels=[4,3,2,1]).astype(int)
+            try:
+                rfm['f_score'] = pd.qcut(rfm['frequency'].rank(method='first'), 4, labels=[1,2,3,4]).astype(int)
+            except Exception:
+                rfm['f_score'] = pd.cut(rfm['frequency'].rank(method='first'), bins=4, labels=[1,2,3,4]).astype(int)
+            try:
+                rfm['m_score'] = pd.qcut(rfm['monetary'], 4, labels=[1,2,3,4]).astype(int)
+            except Exception:
+                rfm['m_score'] = pd.cut(rfm['monetary'], bins=4, labels=[1,2,3,4]).astype(int)
 
-        with col1:
-            assinantes = data[data['assinante_clube'] == 'Sim']
-            st.metric(
-                "💎 Assinantes do Clube",
-                f"{len(assinantes)} clientes",
-                f"R$ {assinantes['valor'].sum():,.2f} em vendas"
-            )
-            if len(assinantes) > 0:
-                avg_assinante = assinantes['valor'].mean()
-                st.caption(f"Ticket médio: R$ {avg_assinante:.2f}")
-                st.success("✅ **Estratégia:** Mantenha benefícios exclusivos e engajamento alto!")
+            rfm['RFM_Score'] = rfm['r_score'] + rfm['f_score'] + rfm['m_score']
 
-        with col2:
-            nao_assinantes = data[data['assinante_clube'] == 'Não']
-            st.metric(
-                "👤 Não Assinantes",
-                f"{len(nao_assinantes)} clientes",
-                f"R$ {nao_assinantes['valor'].sum():,.2f} em vendas"
-            )
-            if len(nao_assinantes) > 0:
-                avg_nao_assinante = nao_assinantes['valor'].mean()
-                st.caption(f"Ticket médio: R$ {avg_nao_assinante:.2f}")
-                st.warning("⚠️ **Oportunidade:** Converta para assinantes com trial gratuito!")
+            # Mapear segmentos simples
+            def map_segment(score):
+                if score >= 10:
+                    return 'Champions'
+                if score >= 8:
+                    return 'Loyal'
+                if score >= 6:
+                    return 'Potential'
+                return 'At Risk'
+
+            rfm['segment'] = rfm['RFM_Score'].apply(map_segment)
+
+            # Visualizações
+            col_a, col_b = st.columns([2,1])
+            with col_a:
+                fig_seg = px.scatter(rfm, x='frequency', y='monetary', color='segment', size='monetary', hover_data=['cliente_id'], title='Segmentação: Frequency x Monetary')
+                st.plotly_chart(fig_seg, use_container_width=True)
+
+            with col_b:
+                seg_counts = rfm['segment'].value_counts().reset_index()
+                seg_counts.columns = ['segment', 'count']
+                fig_segbar = px.bar(seg_counts, x='count', y='segment', orientation='h', title='Clientes por Segmento')
+                st.plotly_chart(fig_segbar, use_container_width=True)
+
+            st.markdown("#### Top clientes por receita")
+            st.dataframe(rfm.sort_values('monetary', ascending=False).head(10)[['cliente_id','monetary','frequency','recency','segment']], use_container_width=True)
+
+        # Mantém métricas por assinantes/nao-assinantes abaixo
 
     with tab3:
         st.subheader("Análise RFM (Recency, Frequency, Monetary)")
@@ -740,10 +898,61 @@ def show_business_insights(data):
 
         **Para que serve:** Identifica seus melhores clientes (VIPs), clientes em risco e oportunidades!
         """)
+        # Gerar RFM de forma dinâmica (reaproveita cálculo se já feito)
+        try:
+            # tentar reusar rfm se existir (definido na tab2)
+            rfm
+        except Exception:
+            # recalcular RFM se necessário
+            date_col = None
+            for c in data.columns:
+                if 'data' in c.lower() or 'date' in c.lower():
+                    date_col = c
+                    break
+            if date_col is None:
+                for c in data.columns:
+                    try:
+                        if np.issubdtype(data[c].dtype, np.datetime64):
+                            date_col = c
+                            break
+                    except Exception:
+                        continue
 
-        img = load_image(plots_dir / "rfm_analysis.png")
-        if img:
-            st.image(img, caption="Análise RFM - Segmentação por valor e comportamento", use_container_width=True)
+            if date_col is None:
+                st.info("Não há dados de data para calcular RFM.")
+            else:
+                df_rfm = data.copy()
+                df_rfm[date_col] = pd.to_datetime(df_rfm[date_col], errors='coerce')
+                ref_date = df_rfm[date_col].max() if not df_rfm[date_col].isna().all() else pd.Timestamp.today()
+                rfm = df_rfm.groupby('cliente_id').agg(recency_date=(date_col,'max'), frequency=(date_col,'count'), monetary=('valor','sum')).reset_index()
+                rfm['recency'] = (ref_date - rfm['recency_date']).dt.days
+                # scores
+                try:
+                    rfm['r_score'] = pd.qcut(rfm['recency'], 4, labels=[4,3,2,1]).astype(int)
+                except Exception:
+                    rfm['r_score'] = pd.cut(rfm['recency'], bins=4, labels=[4,3,2,1]).astype(int)
+                try:
+                    rfm['f_score'] = pd.qcut(rfm['frequency'].rank(method='first'), 4, labels=[1,2,3,4]).astype(int)
+                except Exception:
+                    rfm['f_score'] = pd.cut(rfm['frequency'].rank(method='first'), bins=4, labels=[1,2,3,4]).astype(int)
+                try:
+                    rfm['m_score'] = pd.qcut(rfm['monetary'], 4, labels=[1,2,3,4]).astype(int)
+                except Exception:
+                    rfm['m_score'] = pd.cut(rfm['monetary'], bins=4, labels=[1,2,3,4]).astype(int)
+                rfm['RFM_Score'] = rfm['r_score'] + rfm['f_score'] + rfm['m_score']
+
+        # Visualizações RFM
+        if 'rfm' in locals() and not rfm.empty:
+            st.markdown("#### Distribuição de Scores RFM")
+            fig_hist = px.histogram(rfm, x='RFM_Score', nbins=12, title='Distribuição de RFM Score')
+            st.plotly_chart(fig_hist, use_container_width=True)
+
+            st.markdown("#### Médias por Score")
+            rfm_stats = rfm.groupby('RFM_Score')[['recency','frequency','monetary']].mean().reset_index()
+            fig_heat = px.imshow(rfm_stats.set_index('RFM_Score').T, text_auto=True, title='Médias R/F/M por RFM Score')
+            st.plotly_chart(fig_heat, use_container_width=True)
+        else:
+            st.info("RFM não disponível para visualização.")
 
         st.markdown("""
         ### 🎯 Como usar o RFM no seu negócio:
@@ -760,7 +969,7 @@ def show_business_insights(data):
         - Clientes perdidos
         - **Ação:** Pesquisa de satisfação, ofertas de "última chance"
 
-        **Promising (Frequency baixa, Monetary crescente):** 🌱
+        **Promising (Frequency baixa, Monetary crescendo):** 🌱
         - Novos clientes com potencial
         - **Ação:** Nurturing, programa de fidelidade, conteúdo educativo sobre vinhos
         """)
@@ -839,10 +1048,158 @@ def show_business_insights(data):
 
         st.divider()
 
-        # Oportunidades de Crescimento - geradas dinamicamente conforme dados disponíveis
-        st.markdown("### 🚀 Oportunidades de Crescimento")
+        # Visualizações rápidas e métricas (dinâmicas)
+        st.markdown("### 📊 Visualizações Rápidas")
 
-        # Montar lista de seções disponíveis
+        vcol1, vcol2, vcol3 = st.columns([1,1,1])
+
+        with vcol1:
+            st.metric("Taxa de Cancelamento", f"{taxa_cancelamento:.1f}%")
+            st.metric("Total Cancelamentos", f"{total_cancelamentos}")
+            st.metric("Ticket Médio", f"R$ {avg_ticket:,.2f}")
+
+        with vcol2:
+            if 'cidade' in data.columns and 'valor' in data.columns:
+                try:
+                    city_sales = data.groupby('cidade')['valor'].sum().sort_values(ascending=False).head(10)
+                    fig_city = px.bar(
+                        x=city_sales.values,
+                        y=city_sales.index,
+                        orientation='h',
+                        title='Top 10 Cidades por Vendas',
+                        labels={'x': 'Total Vendas (R$)', 'y': 'Cidade'},
+                        color_discrete_sequence=['#8B4513'],
+                        template='plotly_white'
+                    )
+                    fig_city.update_traces(hovertemplate='Cidade: %{y}<br>Vendas: R$ %{x:,.2f}')
+                    fig_city.update_layout(margin=dict(l=100))
+                    st.plotly_chart(fig_city, use_container_width=True)
+                except Exception as e:
+                    st.info(f"Não foi possível gerar gráfico de cidades: {e}")
+            else:
+                st.info("Dados de cidade/valor ausentes para gráfico de cidades")
+
+        with vcol3:
+            if 'assinante_clube' in data.columns and 'valor' in data.columns:
+                try:
+                    contrib = data.groupby('assinante_clube')['valor'].sum().reset_index()
+                    fig_pie = px.pie(contrib, names='assinante_clube', values='valor', title='Participação por Assinante (Receita)')
+                    st.plotly_chart(fig_pie, use_container_width=True)
+                except Exception as e:
+                    st.info(f"Não foi possível gerar gráfico de participação: {e}")
+            else:
+                st.info("Dados de assinantes/valor ausentes para participação")
+
+        # Top produtos
+        if 'produto_id' in data.columns and 'quantidade' in data.columns:
+            try:
+                prod_df_q = data.groupby('produto_id')['quantidade'].sum().reset_index()
+                prod_df_q = prod_df_q.sort_values('quantidade', ascending=False).head(10).reset_index(drop=True)
+                # mapear para nome do produto quando disponível
+                name_col_q = None
+                for cand in ['nome_produto', 'nome', 'produto_nome', 'nome_do_produto', 'nome_produto_prod']:
+                    if cand in data.columns:
+                        name_col_q = cand
+                        break
+                if name_col_q:
+                    prod_names_q = data.dropna(subset=['produto_id', name_col_q]).drop_duplicates('produto_id').set_index('produto_id')[name_col_q].to_dict()
+                    prod_df_q['produto_name'] = prod_df_q['produto_id'].map(prod_names_q)
+                    prod_df_q['produto_name'] = prod_df_q['produto_name'].fillna(prod_df_q['produto_id'].astype(str))
+                else:
+                    prod_df_q['produto_name'] = prod_df_q['produto_id'].astype(str)
+                total_q = prod_df_q['quantidade'].sum() if prod_df_q['quantidade'].sum() > 0 else 1
+                prod_df_q['percent'] = prod_df_q['quantidade'] / total_q * 100
+                prod_df_q['rank'] = prod_df_q.index + 1
+
+                def rank_color_q(r):
+                    if r == 1:
+                        return '#D4AF37'
+                    if r == 2:
+                        return '#C0C0C0'
+                    if r == 3:
+                        return '#CD7F32'
+                    return '#722F37'
+
+                colors_q = [rank_color_q(r) for r in prod_df_q['rank']]
+
+                # Gráfico vertical para quantidade vendida, ordenado para maior à direita
+                prod_plot_q = prod_df_q.sort_values(by='quantidade', ascending=True).reset_index(drop=True)
+                colors_plot_q = [rank_color_q(r) for r in prod_plot_q['rank']]
+
+                fig_prod_q = go.Figure()
+                # formatar valores como texto para exibir acima das barras
+                display_q = prod_plot_q['quantidade'].apply(lambda x: f"{int(x):,}")
+                fig_prod_q.add_trace(go.Bar(
+                    x=prod_plot_q['produto_id'].astype(str),
+                    y=prod_plot_q['quantidade'],
+                    marker=dict(color=colors_plot_q),
+                    text=display_q,
+                    textposition='outside',
+                    textfont=dict(size=11, color='black'),
+                    hovertemplate='Produto: %{x}<br>Quantidade: %{y}<extra></extra>'
+                ))
+                fig_prod_q.update_layout(title='Top Produtos por Quantidade Vendida', xaxis_title='Produto ID', yaxis_title='Quantidade', template='plotly_white', margin=dict(b=200))
+                fig_prod_q.update_xaxes(categoryorder='array', categoryarray=prod_plot_q['produto_id'].astype(str).tolist(), tickangle=-45)
+
+                st.plotly_chart(fig_prod_q, use_container_width=True)
+                # Mostrar tabela simplificada com rank
+                prod_table_q = prod_df_q[['rank','produto_name','quantidade','percent']].copy() if 'produto_name' in prod_df_q.columns else prod_df_q[['rank','produto_id','quantidade','percent']].copy()
+                prod_table_q['percent'] = prod_table_q['percent'].round(1)
+                if 'produto_name' in prod_table_q.columns:
+                    prod_table_q.columns = ['Rank','Produto','Quantidade','% Participação']
+                else:
+                    prod_table_q.columns = ['Rank','Produto ID','Quantidade','% Participação']
+                st.dataframe(prod_table_q, use_container_width=True)
+            except Exception as e:
+                st.info(f"Não foi possível gerar gráfico de produtos: {e}")
+        else:
+            st.info("Dados de produto/quantidade ausentes para análise de mix de produtos")
+
+        # Tendência de vendas (se houver coluna de data)
+        date_col = None
+        for c in data.columns:
+            if 'data' in c.lower() or 'date' in c.lower():
+                date_col = c
+                break
+        if date_col is None:
+            for c in data.columns:
+                try:
+                    if np.issubdtype(data[c].dtype, np.datetime64):
+                        date_col = c
+                        break
+                except Exception:
+                    continue
+
+        if date_col is not None and 'valor' in data.columns:
+            try:
+                df_t = data.copy()
+                df_t[date_col] = pd.to_datetime(df_t[date_col], errors='coerce')
+                df_t = df_t.dropna(subset=[date_col])
+                if not df_t.empty:
+                    df_t['month'] = df_t[date_col].dt.to_period('M').dt.to_timestamp()
+                    sales = df_t.groupby('month')['valor'].sum().reset_index()
+                    if sales.empty:
+                        st.info("Não há vendas agregáveis para a análise temporal.")
+                    else:
+                        fig = px.line(
+                            sales,
+                            x='month',
+                            y='valor',
+                            title='Vendas ao Longo do Tempo',
+                            labels={'month': 'Mês', 'valor': 'Total Vendas (R$)'},
+                            template='plotly_white'
+                        )
+                        fig.update_traces(mode='lines+markers', hovertemplate='Mês: %{x|%Y-%m}<br>Vendas: R$ %{y:,.2f}')
+                        # adicionar média móvel 3 períodos
+                        try:
+                            sales['rolling_3m'] = sales['valor'].rolling(window=3, min_periods=1).mean()
+                            fig.add_scatter(x=sales['month'], y=sales['rolling_3m'], mode='lines', name='Média Móvel 3M', line=dict(dash='dash', color='#FF7F0E'))
+                        except Exception:
+                            pass
+                        fig.update_xaxes(rangeslider_visible=True)
+                        st.plotly_chart(fig, use_container_width=True)
+            except Exception as e:
+                st.info(f"Não foi possível gerar análise temporal: {e}")
         sections = []
         if 'valor' in data.columns:
             sections.append(('promo', '📢 Promoções'))
