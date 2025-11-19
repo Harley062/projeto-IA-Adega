@@ -117,7 +117,7 @@ def main():
         logo = load_image("assets/adega.png")
         if logo:
             st.image(logo, width=200)
-        st.markdown('<h1 class="main-header">Sistema de Análise de Dados - Adega</h1>', unsafe_allow_html=True)
+        # st.markdown('<h1 class="main-header">Adega Bom Sabor</h1>', unsafe_allow_html=True)
 
     # Sidebar
     with st.sidebar:
@@ -469,116 +469,32 @@ def show_models():
 
         return
 
-    # Tabs
-    tab1, tab2, tab3 = st.tabs(["Performance", "Predições", "Análise do Modelo"])
+    # Seção de predições (removida a aba 'Análise do Modelo')
+    st.markdown('<h3><i class="fas fa-bullseye icon"></i> Sistema Preditivo Completo</h3>', unsafe_allow_html=True)
 
-    with tab1:
-        st.subheader("Performance do Modelo")
+    # Sub-tabs para diferentes tipos de predição
+    pred_tab1, pred_tab2, pred_tab3, pred_tab4 = st.tabs([
+        "Predição Individual",
+        "Predição em Lote",
+        "Predição de Vendas",
+        "Recomendação de Produtos"
+    ])
 
-        st.info("**O que é isso:** O sistema foi treinado para prever se um cliente vai cancelar a assinatura ou continuar comprando.\n\n"
-                "**Para que serve:** Identificar clientes em risco ANTES que eles cancelem, permitindo ações preventivas de retenção!")
+    with pred_tab1:
+        from pages_prediction import show_cancelamento_prediction
+        show_cancelamento_prediction()
 
-        # Explicação das métricas
-        with st.expander("📚 Entenda as Métricas do Modelo"):
-            st.markdown("""
-            **Accuracy (Acurácia):** % de previsões corretas no geral. Ex: 85% = acertou 85 de cada 100 previsões.
+    with pred_tab2:
+        from pages_prediction import show_batch_prediction
+        show_batch_prediction()
 
-            **Precision (Precisão):** Quando o modelo diz que um cliente vai cancelar, qual a chance de estar certo? Alta precisão = menos alarmes falsos.
+    with pred_tab3:
+        from pages_prediction import show_sales_prediction
+        show_sales_prediction()
 
-            **Recall (Sensibilidade):** De todos os clientes que realmente cancelaram, quantos o modelo identificou? Alto recall = pega mais casos reais.
-
-            **F1-Score:** Equilíbrio entre Precision e Recall. Quanto maior, melhor o modelo como um todo.
-
-            **ROC-AUC:** Mede a capacidade do modelo de distinguir entre quem cancela e quem não cancela. Quanto mais próximo de 1, melhor!
-
-            💡 **Para seu negócio:** Um modelo com alto Recall é importante porque você NÃO quer perder nenhum cliente em risco!
-            """)
-
-        # Carregar relatório
-        if report_path.exists():
-            with open(report_path, 'r', encoding='utf-8') as f:
-                report = f.read()
-
-            st.text(report)
-
-        st.divider()
-
-        # Visualizações de performance
-        col1, col2 = st.columns(2)
-
-        plots_dir = Path("output/plots")
-
-        with col1:
-            st.markdown("##### Matriz de Confusão")
-            st.caption("**O que mostra:** Compara previsões vs realidade. Diagonal = acertos, resto = erros.")
-            img = load_image(plots_dir / "confusion_matrix.png")
-            if img:
-                st.image(img, use_container_width=True)
-                st.success("✅ Verde na diagonal = modelo está acertando!")
-
-            st.divider()
-
-            st.markdown("##### Comparação de Modelos")
-            st.caption("**O que mostra:** Ranking dos melhores modelos testados. O topo é o vencedor!")
-            img = load_image(plots_dir / "model_comparison.png")
-            if img:
-                st.image(img, use_container_width=True)
-
-        with col2:
-            st.markdown("##### Curva ROC")
-            st.caption("**O que mostra:** Quanto mais próxima do canto superior esquerdo, melhor o modelo.")
-            img = load_image(plots_dir / "roc_curve.png")
-            if img:
-                st.image(img, use_container_width=True)
-                st.info("📊 Área abaixo da curva (AUC) próxima de 1 = excelente!")
-
-            st.divider()
-
-            st.markdown("##### Curva Precision-Recall")
-            st.caption("**O que mostra:** Equilíbrio entre não perder clientes em risco e evitar alarmes falsos.")
-            img = load_image(plots_dir / "precision_recall_curve.png")
-            if img:
-                st.image(img, use_container_width=True)
-
-    with tab2:
-        st.markdown('<h3><i class="fas fa-bullseye icon"></i> Sistema Preditivo Completo</h3>', unsafe_allow_html=True)
-
-        # Sub-tabs para diferentes tipos de predição
-        pred_tab1, pred_tab2, pred_tab3, pred_tab4 = st.tabs([
-            "Predição Individual",
-            "Predição em Lote",
-            "Predição de Vendas",
-            "Recomendação de Produtos"
-        ])
-
-        with pred_tab1:
-            from pages_prediction import show_cancelamento_prediction
-            show_cancelamento_prediction()
-
-        with pred_tab2:
-            from pages_prediction import show_batch_prediction
-            show_batch_prediction()
-
-        with pred_tab3:
-            from pages_prediction import show_sales_prediction
-            show_sales_prediction()
-
-        with pred_tab4:
-            from pages_prediction import show_product_recommendation
-            show_product_recommendation()
-
-    with tab3:
-        st.subheader("🔍 Análise de Features")
-
-        st.info("**O que significa:** Mostra quais fatores mais influenciam o cancelamento de assinatura.\n\n"
-                "**Insight para negócio:** Foque nos fatores mais importantes! Se 'pontuação de engajamento' está no topo, invista em manter clientes engajados.")
-
-        img = load_image(Path("output/plots") / "feature_importance.png")
-        if img:
-            st.image(img, caption="Importância das Características - Os fatores que mais preveem cancelamento", use_container_width=True)
-            st.success("💡 As barras maiores são os fatores mais importantes para evitar cancelamentos!")
-        else:
-            st.info("Análise de features não disponível")
+    with pred_tab4:
+        from pages_prediction import show_product_recommendation
+        show_product_recommendation()
 
 
 def show_business_insights(data):
@@ -695,21 +611,37 @@ def show_business_insights(data):
     with tab4:
         st.subheader("💡 Recomendações Estratégicas Acionáveis")
 
-        # Calcular insights detalhados
-        taxa_cancelamento = (data['cancelou_assinatura'] == 'Sim').sum() / len(data) * 100
-        total_cancelamentos = (data['cancelou_assinatura'] == 'Sim').sum()
-        avg_ticket = data['valor'].mean()
-        top_city = data.groupby('cidade')['valor'].sum().idxmax()
-        top_city_revenue = data.groupby('cidade')['valor'].sum().max()
+        # Calcular insights detalhados (robusto em relação ao schema)
+        # Valores padrão / seguros caso colunas não existam
+        taxa_cancelamento = 0.0
+        total_cancelamentos = 0
+        avg_ticket = float(data['valor'].mean()) if 'valor' in data.columns else 0.0
+        top_city = None
+        top_city_revenue = 0.0
+
+        if 'cancelou_assinatura' in data.columns:
+            total_cancelamentos = int((data['cancelou_assinatura'] == 'Sim').sum())
+            taxa_cancelamento = (total_cancelamentos / len(data) * 100) if len(data) > 0 else 0.0
+
+        if 'cidade' in data.columns and 'valor' in data.columns:
+            city_sales = data.groupby('cidade')['valor'].sum()
+            if not city_sales.empty:
+                top_city = city_sales.idxmax()
+                top_city_revenue = float(city_sales.max())
 
         # Análise de produtos
-        if 'produto_id' in data.columns:
+        top_products = None
+        if 'produto_id' in data.columns and 'quantidade' in data.columns:
             top_products = data.groupby('produto_id')['quantidade'].sum().nlargest(3)
 
         # Análise de assinantes
-        assinantes_count = (data['assinante_clube'] == 'Sim').sum()
-        assinantes_revenue = data[data['assinante_clube'] == 'Sim']['valor'].sum()
-        total_revenue = data['valor'].sum()
+        assinantes_count = 0
+        assinantes_revenue = 0.0
+        total_revenue = float(data['valor'].sum()) if 'valor' in data.columns else 0.0
+        if 'assinante_clube' in data.columns and 'valor' in data.columns:
+            assinantes = data[data['assinante_clube'] == 'Sim']
+            assinantes_count = len(assinantes)
+            assinantes_revenue = float(assinantes['valor'].sum())
         assinante_contribution = (assinantes_revenue / total_revenue * 100) if total_revenue > 0 else 0
 
         # Painel de Alertas
@@ -750,137 +682,86 @@ def show_business_insights(data):
 
         st.divider()
 
-        # Oportunidades de Crescimento
+        # Oportunidades de Crescimento - geradas dinamicamente conforme dados disponíveis
         st.markdown("### 🚀 Oportunidades de Crescimento")
 
-        tab_promo, tab_expansao, tab_produto, tab_retencao = st.tabs([
-            "📢 Promoções", "🌎 Expansão", "📦 Mix de Produtos", "🔒 Retenção"
-        ])
+        # Montar lista de seções disponíveis
+        sections = []
+        if 'valor' in data.columns:
+            sections.append(('promo', '📢 Promoções'))
+        if 'cidade' in data.columns and 'valor' in data.columns:
+            sections.append(('expansao', '🌎 Expansão'))
+        if 'produto_id' in data.columns and 'quantidade' in data.columns:
+            sections.append(('produto', '📦 Mix de Produtos'))
+        if 'cancelou_assinatura' in data.columns or 'assinante_clube' in data.columns:
+            sections.append(('retencao', '🔒 Retenção'))
 
-        with tab_promo:
-            st.markdown(f"""
-            #### Quando e Como Fazer Promoções
+        # Se nada relevante estiver presente, mostrar uma visão geral
+        if not sections:
+            sections = [('overview', '🔍 Geral')]
 
-            **1. Promoção de Ticket Médio (Atual: R$ {avg_ticket:.2f})**
-            - **Quando:** Quinzenalmente
-            - **Como:** "Compre 2, leve 3" ou desconto progressivo (5% acima de R$100, 10% acima de R$200)
-            - **Objetivo:** Aumentar ticket médio em 20%
+        tabs = st.tabs([label for _, label in sections])
 
-            **2. Promoção de Reativação**
-            - **Quando:** Mensalmente para clientes inativos há mais de 60 dias
-            - **Como:** Email com cupom de 15% + frete grátis
-            - **Objetivo:** Recuperar 25% dos inativos
+        for (key, _), tab in zip(sections, tabs):
+            with tab:
+                if key == 'promo':
+                    st.markdown(f"""
+                    #### Quando e Como Fazer Promoções
 
-            **3. Promoção Sazonal**
-            - **Quando:** Datas comemorativas (Dia dos Pais, Natal, Black Friday)
-            - **Como:** Kits temáticos com 20-30% off
-            - **Objetivo:** Aumentar volume de vendas em 50% no período
+                    **1. Promoção de Ticket Médio (Atual: R$ {avg_ticket:.2f})**
+                    - **Quando:** Quinzenalmente
+                    - **Como:** "Compre 2, leve 3" ou desconto progressivo
+                    - **Objetivo:** Aumentar ticket médio
+                    """)
 
-            **4. Flash Sale**
-            - **Quando:** Sexta-feira, 18h-22h
-            - **Como:** Produto selecionado com 40% off (estoque limitado)
-            - **Objetivo:** Criar urgência e engajamento
-            """)
+                    if 'valor' in data.columns:
+                        st.info("Sugestão: Segmentar promoções por faixa de ticket para maximizar conversão.")
+                    else:
+                        st.info("Sem dados de valor; foque em promoções por frequência ou produtos.")
 
-        with tab_expansao:
-            st.markdown(f"""
-            #### Estratégia de Expansão Geográfica
+                elif key == 'expansao':
+                    if top_city:
+                        st.markdown(f"""
+                        #### Estratégia de Expansão Geográfica
 
-            **Seu Melhor Mercado Atual: {top_city} (R$ {top_city_revenue:,.2f})**
+                        **Seu Melhor Mercado Atual: {top_city} (R$ {top_city_revenue:,.2f})**
 
-            **Plano de Expansão:**
+                        **Ações:**
+                        - Consolidar presença em {top_city}
+                        - Replicar estratégias em cidades semelhantes
+                        """)
+                    else:
+                        st.info("Necessário dados de cidade e valor para gerar plano de expansão geográfica.")
 
-            **1. Fase 1 - Consolidar {top_city} (Mês 1-2)**
-            - Aumentar investimento em marketing local
-            - Parcerias com restaurantes locais
-            - Meta: +30% de crescimento
+                elif key == 'produto':
+                    st.markdown("#### Otimização de Mix de Produtos")
+                    if top_products is not None and not top_products.empty:
+                        st.markdown("**Top produtos por quantidade:**")
+                        for pid, q in top_products.items():
+                            st.write(f"- Produto {pid}: {int(q)} unidades")
+                        st.info("Ação: garantir estoque dos best-sellers e criar combos com margem.")
+                    else:
+                        st.info("Sem dados estruturados de produto/quantidade para análises detalhadas.")
 
-            **2. Fase 2 - Replicar Sucesso (Mês 3-4)**
-            - Identificar cidades similares demograficamente
-            - Aplicar mesmas estratégias que funcionaram em {top_city}
-            - Teste em 2-3 cidades novas
+                elif key == 'retencao':
+                    st.markdown("#### Programa de Retenção e Fidelização")
+                    st.markdown(f"**Situação atual: {total_cancelamentos} cancelamentos (taxa {taxa_cancelamento:.1f}%)**")
+                    st.markdown("**Recomendações rápidas:**")
+                    st.write("- Rodar modelos preditivos semanalmente para detectar clientes em risco")
+                    st.write("- Criar automações de reativação (cupons, e-mails personalizados)")
+                    if assinantes_count:
+                        st.write(f"- Focar em fidelização: {assinantes_count} assinantes gerando {assinante_contribution:.1f}% da receita")
+                    else:
+                        st.write("- Incentivar conversão para assinaturas com trials e benefícios")
 
-            **3. Fase 3 - Expansão Digital (Mês 5-6)**
-            - Investir em ads geolocalizados
-            - Criar programa de indicação
-            - Expandir para 5 novas cidades
-
-            **Cidades com Baixo Desempenho:**
-            - Faça pesquisa local para entender barreiras
-            - Considere parcerias com distribuidores locais
-            - Ofereça frete grátis como teste por 30 dias
-            """)
-
-        with tab_produto:
-            st.markdown(f"""
-            #### Otimização de Mix de Produtos
-
-            **Análise Atual:**
-            - Identifique os Top 10 produtos (use a aba "Análise de Produtos")
-            - Analise margem de lucro vs volume de vendas
-
-            **Estratégias:**
-
-            **1. Produtos "Estrela" (Alto volume, Alta margem)** ⭐
-            - **Ação:** NUNCA deixe faltar estoque
-            - **Promoção:** Use como "isca" em combos
-            - **Exposição:** Destaque na home do site/loja
-
-            **2. Produtos "Vaca Leiteira" (Alto volume, Baixa margem)** 🐄
-            - **Ação:** Mantenha estoque, mas venda em combo com produtos de alta margem
-            - **Exemplo:** "Compre vinho popular + vinho premium com 15% off"
-
-            **3. Produtos "Oportunidade" (Baixo volume, Alta margem)** 💎
-            - **Ação:** Invista em marketing educativo
-            - **Exemplo:** Degustações, vídeos sobre harmonização
-            - **Posicionamento:** Vinhos "premium" ou "exclusivos"
-
-            **4. Produtos "Peso Morto" (Baixo volume, Baixa margem)** ⚠️
-            - **Ação:** Liquidar em promoção relâmpago
-            - **Decisão:** Substituir por produtos melhores
-
-            **Novos Produtos:**
-            - Analise produtos similares aos best-sellers
-            - Teste em pequena escala (50-100 unidades)
-            - Colete feedback antes de comprar estoque grande
-            """)
-
-        with tab_retencao:
-            st.markdown(f"""
-            #### Programa de Retenção e Fidelização
-
-            **Seu Desafio: {total_cancelamentos} clientes já cancelaram ({taxa_cancelamento:.1f}%)**
-
-            **Sistema de 3 Camadas:**
-
-            **1. Prevenção (ANTES do cliente pensar em sair)** 🛡️
-            - **Semana 1-2:** Email de boas-vindas + guia de vinhos
-            - **Mês 1:** Pesquisa de satisfação + cupom de surpresa
-            - **Mês 2-3:** Programa de pontos/cashback
-            - **Trimestral:** Benefício exclusivo (degustação VIP, lançamentos antecipados)
-
-            **2. Detecção Precoce (Sinais de risco)** 🔍
-            - **Use o modelo preditivo semanalmente**
-            - Monitore: Queda de engajamento, reclamações, redução de compras
-            - **Ação imediata:** Contato proativo (telefone ou WhatsApp)
-
-            **3. Recuperação (Cliente já cancelou)** 🔄
-            - **Até 7 dias:** Email automático com desconto de 20%
-            - **14 dias:** Ligação pessoal para entender motivo
-            - **30 dias:** "Sentimos sua falta" + oferta irresistível
-            - **90 dias:** Última tentativa com benefício único
-
-            **KPIs para Monitorar:**
-            - Taxa de cancelamento mensal (meta: <10%)
-            - Taxa de recuperação (meta: >30%)
-            - NPS - Net Promoter Score
-            - Tempo médio de vida do cliente (CLV)
-            """)
+                elif key == 'overview':
+                    st.markdown("#### Visão Geral de Oportunidades")
+                    st.info("Não há colunas suficientes para sugestões específicas. Considere processar os dados em '⚙️ Atualizar Dados'.")
 
         st.divider()
 
         # Checklist Semanal
-        st.markdown("### ✅ Checklist Semanal do Gestor")
+        st.markdown("### ✅ Checklist Semanal")
 
         col1, col2 = st.columns(2)
 
