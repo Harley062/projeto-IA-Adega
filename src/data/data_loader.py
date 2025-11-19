@@ -32,17 +32,17 @@ class DataLoader:
 
             # Carregar CSVs com o delimitador correto
             self.clientes = pd.read_csv(
-                self.data_dir / 'data' / 'Cliente.csv',
+                self.data_dir / 'Cliente.csv',
                 delimiter=';',
                 encoding='utf-8'
             )
             self.produtos = pd.read_csv(
-                self.data_dir / 'data' / 'produtos.csv',
+                self.data_dir / 'produtos.csv',
                 delimiter=';',
                 encoding='utf-8'
             )
             self.compras = pd.read_csv(
-                self.data_dir / 'data' / 'Compras.csv',
+                self.data_dir / 'Compras.csv',
                 delimiter=';',
                 encoding='utf-8'
             )

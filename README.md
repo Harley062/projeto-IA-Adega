@@ -77,7 +77,19 @@ projeto IA Adega/
 
 1. Clone o repositório ou navegue até o diretório do projeto
 
-2. Instale as dependências:
+2. Crie e ative o ambiente virtual:
+```bash
+# Criar ambiente virtual
+python -m venv venv
+
+# Ativar (Windows)
+venv\Scripts\activate
+
+# Ativar (Linux/Mac)
+source venv/bin/activate
+```
+
+3. Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```

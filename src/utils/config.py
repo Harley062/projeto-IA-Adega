@@ -10,7 +10,7 @@ class Config:
     """Configurações do projeto"""
 
     # Diretórios
-    DATA_DIR: str = "."
+    DATA_DIR: str = "data"
     OUTPUT_DIR: str = "output"
     MODELS_DIR: str = "output/models"
     PLOTS_DIR: str = "output/plots"

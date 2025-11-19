@@ -4,8 +4,8 @@ Pipeline Principal de Análise de Dados da Adega
 import sys
 from pathlib import Path
 
-# Adicionar src ao path
-sys.path.append(str(Path(__file__).parent / 'src'))
+# Adicionar src ao path (pipeline está em scripts/, src está na raiz)
+sys.path.append(str(Path(__file__).parent.parent / 'src'))
 
 import pandas as pd
 import numpy as np
