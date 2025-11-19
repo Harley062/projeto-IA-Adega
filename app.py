@@ -451,12 +451,70 @@ def show_eda():
 
         st.info("**O que significa:** Mostra como suas vendas evoluem ao longo do tempo - tendências, sazonalidades e padrões.\n\n"
                 "**Insight para negócio:** Identifique meses de alta/baixa, planeje estoque e promoções. Aproveite períodos de pico e crie estratégias para períodos fracos!")
+        # Tentar gerar análise temporal a partir dos dados processados
+        if data_live is not None and not data_live.empty:
+            # Detectar coluna de data (heurística: nome contendo 'data'/'date' ou dtype datetime)
+            date_col = None
+            for c in data_live.columns:
+                if 'data' in c.lower() or 'date' in c.lower():
+                    date_col = c
+                    break
 
-        img = load_image(plots_dir / "sales_over_time.png")
-        if img:
-            st.image(img, caption="Vendas ao Longo do Tempo - Identifique sazonalidade e tendências", use_container_width=True)
+            if date_col is None:
+                for c in data_live.columns:
+                    try:
+                        if np.issubdtype(data_live[c].dtype, np.datetime64):
+                            date_col = c
+                            break
+                    except Exception:
+                        continue
+
+            # Tentativa adicional: parse de coluna chamada 'data' se existir
+            if date_col is None and 'data' in data_live.columns:
+                try:
+                    parsed = pd.to_datetime(data_live['data'], errors='coerce')
+                    if parsed.notna().any():
+                        data_live = data_live.copy()
+                        data_live['data_parsed'] = parsed
+                        date_col = 'data_parsed'
+                except Exception:
+                    date_col = None
+
+            if date_col:
+                # Verificar se existe coluna de valor para agregar
+                if 'valor' in data_live.columns:
+                    df = data_live.copy()
+                    df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+                    df = df.dropna(subset=[date_col])
+                    if df.empty:
+                        st.info("Dados de data presentes, mas nenhum registro válido após parsing.")
+                    else:
+                        # Agregação por mês (período mensais) e plot
+                        df['month'] = df[date_col].dt.to_period('M').dt.to_timestamp()
+                        sales = df.groupby('month')['valor'].sum().reset_index()
+                        if sales.empty:
+                            st.info("Não há vendas agregáveis para a análise temporal.")
+                        else:
+                            fig = px.line(
+                                sales,
+                                x='month',
+                                y='valor',
+                                title='Vendas ao Longo do Tempo',
+                                labels={'month': 'Mês', 'valor': 'Total Vendas (R$)'}
+                            )
+                            fig.update_traces(mode='lines+markers')
+                            st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Não há coluna 'valor' para calcular vendas ao longo do tempo.")
+            else:
+                st.info("Nenhuma coluna de data detectada nos dados processados para análise temporal.")
         else:
-            st.info("Análise temporal não disponível")
+            # fallback para imagem estática quando não houver dados processados
+            img = load_image(plots_dir / "sales_over_time.png")
+            if img:
+                st.image(img, caption="Vendas ao Longo do Tempo - Identifique sazonalidade e tendências", use_container_width=True)
+            else:
+                st.info("Análise temporal não disponível")
 
 
 def show_models():
