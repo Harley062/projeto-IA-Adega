@@ -38,59 +38,109 @@ def carregar_clientes_com_compras():
 
 def show_cancelamento_prediction():
     """Interface para predição de cancelamento"""
-
     st.markdown('<h3><i class="fas fa-bullseye"></i> Previsão de Cancelamento de Assinaturas</h3>', unsafe_allow_html=True)
 
-    st.info("""
+    st.info(
+        """
     **Previsão de Cancelamento** identifica clientes em risco de cancelar a assinatura.
-    Preencha os dados abaixo para obter uma previsão instantânea.
-    """)
+    Selecione um cliente da base e os dados serão preenchidos automaticamente para a predição.
+    """
+    )
 
-    # Formulário para entrada de dados
-    with st.form("churn_prediction_form"):
-        st.markdown('### <i class="fas fa-clipboard-list"></i> Dados do Cliente', unsafe_allow_html=True)
+    # Carregar clientes com histórico
+    try:
+        clientes_options = carregar_clientes_com_compras()
 
-        col1, col2 = st.columns(2)
+        if len(clientes_options) == 0:
+            st.warning("⚠️ Nenhum cliente com histórico de compras encontrado.")
+            return
+
+        cliente_label = st.selectbox(
+            "Selecione o Cliente",
+            options=list(clientes_options.keys()),
+            help="Escolha um cliente para preencher os dados automaticamente"
+        )
+
+        cliente_id = clientes_options[cliente_label]
+
+    except Exception as e:
+        st.error(f"Erro ao carregar clientes: {e}")
+        return
+
+    # Buscar dados do cliente na base
+    try:
+        from data.data_loader import DataLoader
+
+        loader = DataLoader(data_dir="data")
+        clientes_df, produtos_df, compras_df = loader.load_data()
+
+        cliente_row = clientes_df[clientes_df['cliente_id'] == cliente_id]
+        if cliente_row.empty:
+            st.error("Cliente não encontrado na base de clientes.")
+            return
+
+        cliente_row = cliente_row.iloc[0]
+
+        # Última compra (se existir)
+        cliente_compras = compras_df[compras_df['cliente_id'] == cliente_id]
+        if not cliente_compras.empty:
+            # tentar ordenar por coluna de data se existir
+            if 'data' in cliente_compras.columns:
+                cliente_compras = cliente_compras.sort_values(by='data', ascending=False)
+            last = cliente_compras.iloc[0]
+            valor = float(last.get('valor', 0.0)) if 'valor' in last.index else 0.0
+            quantidade = int(last.get('quantidade', 1)) if 'quantidade' in last.index else 1
+            tipo_uva = None
+            if 'produto_id' in last.index and 'produto_id' in produtos_df.columns:
+                prod = produtos_df[produtos_df['produto_id'] == last['produto_id']]
+                if not prod.empty and 'tipo_uva' in prod.columns:
+                    tipo_uva = prod.iloc[0]['tipo_uva']
+        else:
+            valor = 0.0
+            quantidade = 1
+            tipo_uva = None
+
+        # Campos do cliente
+        nome = cliente_row.get('nome', f'Cliente {cliente_id}')
+        idade = int(cliente_row.get('idade', 35)) if 'idade' in cliente_row.index else 35
+        cidade = cliente_row.get('cidade', 'Desconhecida') if 'cidade' in cliente_row.index else 'Desconhecida'
+        assinante_clube = cliente_row.get('assinante_clube', 'Não') if 'assinante_clube' in cliente_row.index else 'Não'
+        pais = cliente_row.get('pais', 'Brasil') if 'pais' in cliente_row.index else 'Brasil'
+        pontuacao_engajamento = float(cliente_row.get('pontuacao_engajamento', 5.0)) if 'pontuacao_engajamento' in cliente_row.index else 5.0
+
+        if not tipo_uva and 'tipo_uva' in cliente_row.index:
+            tipo_uva = cliente_row.get('tipo_uva')
+
+        if not tipo_uva:
+            tipo_uva = 'Indefinido'
+
+        # Mostrar resumo do cliente
+        st.divider()
+        st.markdown('### <i class="fas fa-clipboard-list"></i> Dados do Cliente (preenchidos da base)', unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
 
         with col1:
-            cliente_id = st.number_input("ID do Cliente", min_value=1, value=1,
-                                         help="Número de identificação único do cliente no sistema")
-            nome = st.text_input("Nome", value="Cliente Teste",
-                                help="Nome completo do cliente")
-            idade = st.number_input("Idade", min_value=18, max_value=100, value=35,
-                                   help="Idade do cliente em anos")
-            cidade = st.selectbox("Cidade", [
-                "São Paulo", "Rio de Janeiro", "Belo Horizonte",
-                "Brasília", "Salvador", "Fortaleza", "Curitiba",
-                "Goiânia"
-            ], help="Cidade onde o cliente reside")
-            pontuacao_engajamento = st.slider(
-                "Nível de Engajamento (1-10)",
-                min_value=1.0, max_value=10.0, value=5.0, step=0.1,
-                help="Quão ativo é o cliente? (1=raramente interage, 10=muito ativo). "
-                     "Considere: abre emails, participa de eventos, responde pesquisas, compra regularmente."
-            )
+            st.text(f"Nome: {nome}")
+            st.text(f"Idade: {idade}")
+            st.text(f"Cidade: {cidade}")
 
         with col2:
-            assinante_clube = st.selectbox("Assinante do Clube", ["Sim", "Não"],
-                                          help="Cliente é membro do clube de vinhos? Membros recebem vinhos mensalmente e têm descontos especiais.")
-            valor = st.number_input("Valor da Última Compra (R$)", min_value=0.0, value=150.0, step=10.0,
-                                   help="Valor em reais da compra mais recente do cliente")
-            quantidade = st.number_input("Quantidade", min_value=1, max_value=10, value=2,
-                                        help="Número de garrafas compradas na última compra")
-            pais = st.selectbox("País do Vinho Preferido", [
-                "Brasil", "França", "Chile", "Argentina", "Itália",
-                "Espanha", "Portugal", "África do Sul"
-            ], help="País de origem dos vinhos que o cliente mais compra")
-            tipo_uva = st.selectbox("Tipo de Uva Preferido", [
-                "Merlot", "Cabernet Sauvignon", "Chardonnay",
-                "Sauvignon Blanc", "Pinot Noir", "Malbec", "Syrah"
-            ], help="Tipo de uva/casta que o cliente prefere nos vinhos")
+            st.text(f"Assinante do Clube: {assinante_clube}")
+            st.text(f"Pontuação de Engajamento: {pontuacao_engajamento}")
+            st.text(f"País preferido: {pais}")
 
-        submitted = st.form_submit_button("Fazer Predição", type="primary")
+        with col3:
+            st.text(f"Valor Última Compra: R$ {valor:.2f}")
+            st.text(f"Quantidade Última Compra: {quantidade}")
+            st.text(f"Tipo de Uva Preferido: {tipo_uva}")
 
-    if submitted:
-        # Preparar dados
+    except Exception as e:
+        st.error(f"Erro ao buscar dados do cliente: {e}")
+        st.exception(e)
+        return
+
+    # Botão para executar predição com os dados carregados
+    if st.button("Fazer Predição", type="primary"):
         customer_data = {
             'cliente_id': cliente_id,
             'nome': nome,
@@ -104,47 +154,44 @@ def show_cancelamento_prediction():
             'tipo_uva': tipo_uva,
         }
 
-        # Fazer predição
         with st.spinner("Analisando dados..."):
             try:
                 predictor = ChurnPredictor()
                 result = predictor.predict_churn(customer_data)
 
-                # Mostrar resultado
+                # Mostrar resultado (mesma lógica de antes)
                 st.divider()
                 st.markdown('### <i class="fas fa-chart-bar"></i> Resultado da Predição', unsafe_allow_html=True)
 
-                # Métricas principais
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
                     st.metric(
                         "Risco de Cancelamento",
-                        result['risk_level'],
-                        f"{result['churn_probability']:.1%}"
+                        result.get('risk_level', 'Desconhecido'),
+                        f"{result.get('churn_probability', 0):.1%}"
                     )
 
                 with col2:
                     st.metric(
                         "Chance de Cancelar",
-                        f"{result['churn_probability']:.1%}",
-                        delta=f"-{result['retain_probability']:.1%}" if result['will_churn'] else None
+                        f"{result.get('churn_probability', 0):.1%}",
+                        delta=(f"-{result.get('retain_probability', 0):.1%}" if result.get('will_churn') else None)
                     )
 
                 with col3:
                     st.metric(
                         "Probabilidade de Retenção",
-                        f"{result['retain_probability']:.1%}",
-                        delta=f"+{result['retain_probability']:.1%}" if not result['will_churn'] else None
+                        f"{result.get('retain_probability', 0):.1%}",
+                        delta=(f"+{result.get('retain_probability', 0):.1%}" if not result.get('will_churn') else None)
                     )
 
-                # Gráfico de probabilidades
                 fig = go.Figure(data=[
                     go.Bar(
                         x=['Cancelar', 'Continuar'],
-                        y=[result['churn_probability'], result['retain_probability']],
+                        y=[result.get('churn_probability', 0), result.get('retain_probability', 0)],
                         marker_color=['#FF6B6B', '#51CF66'],
-                        text=[f"{result['churn_probability']:.1%}", f"{result['retain_probability']:.1%}"],
+                        text=[f"{result.get('churn_probability', 0):.1%}", f"{result.get('retain_probability', 0):.1%}"],
                         textposition='auto',
                     )
                 ])
@@ -159,18 +206,17 @@ def show_cancelamento_prediction():
 
                 st.plotly_chart(fig, use_container_width=True)
 
-                # Recomendações
                 st.divider()
                 st.markdown('### <i class="fas fa-lightbulb"></i> Recomendações', unsafe_allow_html=True)
 
-                if result['risk_level'] == "Alto":
+                if result.get('risk_level') == "Alto":
                     st.markdown('<p style="color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 5px;"><i class="fas fa-exclamation-triangle"></i> ⚠️ ATENÇÃO: Cliente em alto risco de cancelar!</p>', unsafe_allow_html=True)
-                elif result['risk_level'] == "Médio":
+                elif result.get('risk_level') == "Médio":
                     st.warning("⚡ Cliente em risco médio - ação recomendada")
                 else:
                     st.markdown('<p style="color: #28a745; background-color: #d4edda; padding: 10px; border-radius: 5px;"><i class="fas fa-check-circle"></i> ✅ Cliente satisfeito - baixo risco de cancelamento</p>', unsafe_allow_html=True)
 
-                for rec in result['recommendations']:
+                for rec in result.get('recommendations', []):
                     st.markdown(f"- {rec}")
 
             except Exception as e:

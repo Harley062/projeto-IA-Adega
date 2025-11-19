@@ -546,7 +546,7 @@ def show_models():
         # Sub-tabs para diferentes tipos de predição
         pred_tab1, pred_tab2, pred_tab3, pred_tab4 = st.tabs([
             "Predição Individual",
-            # "Predição em Lote",
+            "Predição em Lote",
             "Predição de Vendas",
             "Recomendação de Produtos"
         ])
