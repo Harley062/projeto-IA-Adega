@@ -20,7 +20,7 @@ from utils.glossario import FAQ, GLOSSARIO
 # Configuração da página
 st.set_page_config(
     page_title="Sistema de Análise - Adega",
-    page_icon="🍷",  # ou use Image.open("adega.png") para usar o logo personalizado
+    page_icon="🍷", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -357,9 +357,12 @@ def show_eda():
     st.markdown('<div class="icon-info"><i class="fas fa-lightbulb"></i> Todas as visualizações foram geradas automaticamente pelo pipeline.</div>', unsafe_allow_html=True)
 
     plots_dir = Path("output/plots")
+    # Tentar carregar dados ao vivo — se disponível, usaremos para gerar gráficos dinâmicos
+    data_live, _ = load_data()
 
-    if not plots_dir.exists() or len(list(plots_dir.glob("*.png"))) == 0:
-        st.warning("⚠️ Gráficos ainda não foram gerados!")
+    has_plots = plots_dir.exists() and len(list(plots_dir.glob("*.png"))) > 0
+    if (not has_plots) and (data_live is None or data_live.empty):
+        st.warning("⚠️ Gráficos ainda não foram gerados e não há dados processados!")
 
         st.info("""
         ### 📊 Como gerar os gráficos:
@@ -420,12 +423,28 @@ def show_eda():
 
         st.info("**O que significa:** Boxplots mostram valores atípicos (pontos fora das 'caixas'). Esses são clientes ou vendas muito diferentes do padrão.\n\n"
                 "**Insight para negócio:** Outliers podem ser VIPs (gastam muito mais) ou oportunidades perdidas (gastam muito menos). Analise ambos!")
-
-        img = load_image(plots_dir / "boxplots.png")
-        if img:
-            st.image(img, caption="Boxplots - Pontos fora das caixas são valores atípicos", use_container_width=True)
+        # Se os dados processados estiverem disponíveis, gerar boxplots dinâmicos
+        if data_live is not None and not data_live.empty:
+            numeric_cols = data_live.select_dtypes(include=[np.number]).columns.tolist()
+            if numeric_cols:
+                fig = go.Figure()
+                for c in numeric_cols:
+                    # evitar colunas com excesso de valores únicos que poluem o gráfico
+                    series = data_live[c].dropna()
+                    if series.empty:
+                        continue
+                    fig.add_trace(go.Box(y=series, name=c))
+                fig.update_layout(title='Boxplots - Outliers nas Variáveis Numéricas')
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Nenhuma coluna numérica detectada nos dados processados para gerar boxplots.")
         else:
-            st.info("Boxplots não disponíveis")
+            # fallback para imagens estáticas quando não houver dados processados
+            img = load_image(plots_dir / "boxplots.png")
+            if img:
+                st.image(img, caption="Boxplots - Pontos fora das caixas são valores atípicos", use_container_width=True)
+            else:
+                st.info("Boxplots não disponíveis")
 
     with tab4:
         st.subheader("Análise Temporal de Vendas")
