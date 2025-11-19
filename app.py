@@ -767,7 +767,7 @@ def show_business_insights(data):
                 ))
                 fig_prod.update_layout(
                     title=f'Top {top_n} Produtos por {metric} (Ranking)',
-                    xaxis_title='Produto ID',
+                    xaxis_title='Produto',
                     yaxis_title=metric,
                     template='plotly_white',
                     margin=dict(b=200),
