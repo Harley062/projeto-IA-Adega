@@ -13,6 +13,7 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from data.feature_engineering import FeatureEngineer
+from models.churn_risk_calculator import ChurnRiskCalculator
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,13 @@ logger = logging.getLogger(__name__)
 class ChurnPredictor:
     """Classe para fazer predições de churn em tempo real"""
 
-    def __init__(self, model_path: str = "output/models/best_model_Gradient_Boosting.pkl"):
+    def __init__(self, model_path: str = "output/models/best_model_Gradient_Boosting.pkl", use_rule_based: bool = True):
         self.model_path = Path(model_path)
         self.model = None
         self.feature_engineer = FeatureEngineer()
         self.feature_names = None
+        self.use_rule_based = use_rule_based  # Usar sistema baseado em regras por padrão
+        self.risk_calculator = ChurnRiskCalculator() if use_rule_based else None
 
     def load_model(self):
         """Carrega o modelo treinado"""
@@ -195,6 +198,11 @@ class ChurnPredictor:
         Returns:
             Dicionário com resultado da predição
         """
+        # Se usar sistema baseado em regras, usar ChurnRiskCalculator
+        if self.use_rule_based and self.risk_calculator is not None:
+            return self.risk_calculator.calculate_churn_probability(customer_data)
+
+        # Caso contrário, usar modelo ML (código original)
         if self.model is None:
             self.load_model()
 

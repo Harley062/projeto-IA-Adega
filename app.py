@@ -15,6 +15,7 @@ sys.path.append(str(Path(__file__).parent / 'src'))
 
 from data.data_loader import DataLoader
 from models.model_trainer import ModelTrainer
+from models.customer_scoring import CustomerScoring, get_scoring_insights
 from utils.glossario import FAQ, GLOSSARIO
 
 # Configuração da página
@@ -128,10 +129,10 @@ def main():
         else:
             st.image("https://img.icons8.com/color/96/000000/wine.png", width=110, use_container_width=False)  # 100 + 10% = 110
 
-        st.title("Menu de Navegação")
+        # st.title("Menu de Navegação")
 
         # Menu com ícones (usando emojis para evitar HTML não suportado)
-        st.markdown("**Selecione uma página:**")
+        # st.markdown("**Selecione uma página:**")
         page_options = {
             "Dashboard Principal": "🏠 Visão Geral",
             "Análise Exploratória": "📊 Gráficos e Tendências",
@@ -681,10 +682,11 @@ def show_business_insights(data):
     plots_dir = Path("output/plots")
 
     # Tabs
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "🍷 Análise de Produtos",
         "👥 Segmentação de Clientes",
         "📈 Análise RFM",
+        "⭐ Score de Clientes",
         "💡 Recomendações"
     ])
 
@@ -981,6 +983,278 @@ def show_business_insights(data):
         """)
 
     with tab4:
+        st.subheader("⭐ Sistema de Score de Clientes")
+
+        st.info("""
+        **O que é o Score de Clientes:** Sistema abrangente que avalia cada cliente em múltiplas dimensões:
+        - **RFM (30%):** Recência, Frequência e Valor Monetário das compras
+        - **Engajamento (25%):** Nível de interação e atividade do cliente
+        - **Fidelidade (25%):** Assinatura do clube, histórico e tempo como cliente
+        - **CLV (20%):** Customer Lifetime Value - valor projetado do cliente
+
+        **Score Final:** De 0 a 100, classificando clientes em segmentos acionáveis.
+        """)
+
+        try:
+            # Calcular scores dos clientes
+            with st.spinner("Calculando scores dos clientes..."):
+                scorer = CustomerScoring(data)
+                scores_df = scorer.calculate_overall_score()
+
+            # Métricas principais
+            st.markdown("### 📊 Visão Geral dos Scores")
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                avg_score = scores_df['overall_score'].mean()
+                st.metric("Score Médio", f"{avg_score:.1f}",
+                         delta=None,
+                         help="Score médio de todos os clientes (0-100)")
+
+            with col2:
+                vip_count = len(scores_df[scores_df['segment'] == 'VIP'])
+                st.metric("Clientes VIP", vip_count,
+                         delta=None,
+                         help="Clientes com score acima de 90")
+
+            with col3:
+                at_risk_count = len(scores_df[scores_df['segment'] == 'Em Risco'])
+                st.metric("Em Risco", at_risk_count,
+                         delta=None,
+                         help="Clientes com score abaixo de 40")
+
+            with col4:
+                total_clv = scores_df['clv'].sum()
+                st.metric("CLV Total", f"R$ {total_clv:,.0f}",
+                         delta=None,
+                         help="Valor vitalício total projetado (12 meses)")
+
+            st.markdown("---")
+
+            # Distribuição de Scores e Segmentos
+            col_a, col_b = st.columns(2)
+
+            with col_a:
+                st.markdown("#### Distribuição de Scores")
+                fig_score_dist = px.histogram(
+                    scores_df,
+                    x='overall_score',
+                    nbins=20,
+                    color='segment',
+                    title='Distribuição de Scores por Segmento',
+                    labels={'overall_score': 'Score do Cliente', 'count': 'Quantidade'},
+                    color_discrete_map={
+                        'VIP': '#FFD700',
+                        'Valioso': '#90EE90',
+                        'Regular': '#87CEEB',
+                        'Potencial': '#FFA500',
+                        'Em Risco': '#FF6B6B'
+                    }
+                )
+                fig_score_dist.update_layout(showlegend=True)
+                st.plotly_chart(fig_score_dist, use_container_width=True)
+
+            with col_b:
+                st.markdown("#### Clientes por Segmento")
+                segment_counts = scores_df['segment'].value_counts().reset_index()
+                segment_counts.columns = ['Segmento', 'Quantidade']
+
+                fig_segments = px.pie(
+                    segment_counts,
+                    values='Quantidade',
+                    names='Segmento',
+                    title='Distribuição de Segmentos',
+                    color='Segmento',
+                    color_discrete_map={
+                        'VIP': '#FFD700',
+                        'Valioso': '#90EE90',
+                        'Regular': '#87CEEB',
+                        'Potencial': '#FFA500',
+                        'Em Risco': '#FF6B6B'
+                    }
+                )
+                st.plotly_chart(fig_segments, use_container_width=True)
+
+            # Análise de Componentes do Score
+            st.markdown("### 🔍 Análise de Componentes do Score")
+
+            col_c, col_d = st.columns(2)
+
+            with col_c:
+                st.markdown("#### Score por Componente (Médias)")
+                components_avg = pd.DataFrame({
+                    'Componente': ['RFM', 'Engajamento', 'Fidelidade', 'CLV'],
+                    'Score Médio': [
+                        scores_df['rfm_score_normalized'].mean(),
+                        scores_df['engagement_score'].mean(),
+                        scores_df['loyalty_score'].mean(),
+                        scores_df['clv_score'].mean()
+                    ]
+                })
+
+                fig_components = px.bar(
+                    components_avg,
+                    x='Componente',
+                    y='Score Médio',
+                    title='Média dos Componentes do Score',
+                    color='Score Médio',
+                    color_continuous_scale='Viridis'
+                )
+                fig_components.update_layout(showlegend=False)
+                st.plotly_chart(fig_components, use_container_width=True)
+
+            with col_d:
+                st.markdown("#### Tier dos Clientes")
+                tier_counts = scores_df['tier'].value_counts().reset_index()
+                tier_counts.columns = ['Tier', 'Quantidade']
+
+                fig_tiers = px.bar(
+                    tier_counts,
+                    x='Tier',
+                    y='Quantidade',
+                    title='Distribuição por Tier',
+                    color='Tier',
+                    color_discrete_map={
+                        'Gold': '#FFD700',
+                        'Silver': '#C0C0C0',
+                        'Bronze': '#CD7F32'
+                    }
+                )
+                st.plotly_chart(fig_tiers, use_container_width=True)
+
+            # Top Clientes
+            st.markdown("### 🏆 Top 10 Clientes por Score")
+            top_customers = scorer.get_top_customers(n=10)
+
+            # Formatar valores para exibição
+            top_display = top_customers.copy()
+            top_display['valor_total'] = top_display['valor_total'].apply(lambda x: f"R$ {x:,.2f}")
+            top_display['clv'] = top_display['clv'].apply(lambda x: f"R$ {x:,.2f}")
+
+            # Renomear colunas
+            top_display.columns = ['ID', 'Nome', 'Score', 'Segmento', 'Tier',
+                                  'Valor Total', 'Frequência', 'CLV (12m)',
+                                  'Fidelidade', 'Engajamento', 'Cidade', 'Assinante']
+
+            st.dataframe(top_display, use_container_width=True)
+
+            # CLV x Score scatter plot
+            st.markdown("### 💰 Relação entre Score e CLV")
+            fig_clv_score = px.scatter(
+                scores_df,
+                x='overall_score',
+                y='clv',
+                color='segment',
+                size='valor_total',
+                hover_data=['nome', 'cidade', 'frequencia'],
+                title='Score do Cliente vs CLV Projetado (12 meses)',
+                labels={
+                    'overall_score': 'Score do Cliente',
+                    'clv': 'CLV (R$)',
+                    'valor_total': 'Gasto Total'
+                },
+                color_discrete_map={
+                    'VIP': '#FFD700',
+                    'Valioso': '#90EE90',
+                    'Regular': '#87CEEB',
+                    'Potencial': '#FFA500',
+                    'Em Risco': '#FF6B6B'
+                }
+            )
+            st.plotly_chart(fig_clv_score, use_container_width=True)
+
+            # Clientes em Risco
+            at_risk_customers = scorer.get_at_risk_customers(threshold=40)
+
+            if len(at_risk_customers) > 0:
+                st.markdown("### ⚠️ Clientes em Risco (Atenção Necessária)")
+                st.warning(f"**{len(at_risk_customers)} clientes** precisam de atenção imediata!")
+
+                # Formatar valores
+                at_risk_display = at_risk_customers.copy()
+                at_risk_display['valor_total'] = at_risk_display['valor_total'].apply(lambda x: f"R$ {x:,.2f}")
+
+                # Renomear colunas
+                at_risk_display.columns = ['ID', 'Nome', 'Score', 'Segmento',
+                                          'Valor Total', 'Dias Última Compra',
+                                          'Cancelou?', 'Fidelidade', 'Engajamento', 'Cidade']
+
+                st.dataframe(at_risk_display, use_container_width=True)
+
+            # Resumo por Segmento
+            st.markdown("### 📈 Resumo Estatístico por Segmento")
+            segment_summary = scorer.get_segment_summary()
+
+            # Formatar valores monetários
+            segment_summary['Valor_Total'] = segment_summary['Valor_Total'].apply(lambda x: f"R$ {x:,.2f}")
+            segment_summary['Valor_Medio'] = segment_summary['Valor_Medio'].apply(lambda x: f"R$ {x:,.2f}")
+            segment_summary['CLV_Total'] = segment_summary['CLV_Total'].apply(lambda x: f"R$ {x:,.2f}")
+            segment_summary['CLV_Medio'] = segment_summary['CLV_Medio'].apply(lambda x: f"R$ {x:,.2f}")
+
+            st.dataframe(segment_summary, use_container_width=True)
+
+            # Insights Acionáveis
+            st.markdown("### 💡 Insights e Recomendações")
+            insights = get_scoring_insights(scores_df)
+
+            col_i1, col_i2 = st.columns(2)
+
+            with col_i1:
+                st.markdown("#### 🎯 Oportunidades")
+
+                # VIPs sem assinatura
+                if insights['vip_no_subscription_count'] > 0:
+                    st.success(f"""
+                    **{insights['vip_no_subscription_count']} clientes VIP sem assinatura**
+                    - Potencial: R$ {insights['vip_no_subscription_potential']:,.2f}
+                    - **Ação:** Ofereça benefícios exclusivos de assinatura!
+                    """)
+
+                # Segmento com maior CLV
+                best_tier_clv = max(insights['avg_clv_by_tier'].items(), key=lambda x: x[1])
+                st.info(f"""
+                **Tier com maior CLV médio: {best_tier_clv[0]}**
+                - CLV Médio: R$ {best_tier_clv[1]:,.2f}
+                - **Ação:** Foque esforços de retenção neste tier!
+                """)
+
+            with col_i2:
+                st.markdown("#### ⚠️ Riscos")
+
+                # Clientes em risco com alto valor
+                if insights['at_risk_high_value_count'] > 0:
+                    st.error(f"""
+                    **{insights['at_risk_high_value_count']} clientes de alto valor em risco**
+                    - Potencial de perda: R$ {insights['at_risk_high_value_total']:,.2f}
+                    - **Ação URGENTE:** Campanha de retenção personalizada!
+                    """)
+
+                # Taxa de churn por segmento
+                if insights['churn_rate_by_segment']:
+                    worst_segment = max(insights['churn_rate_by_segment'].items(),
+                                      key=lambda x: x[1] if not np.isnan(x[1]) else 0)
+                    st.warning(f"""
+                    **Segmento com maior churn: {worst_segment[0]}**
+                    - Taxa de cancelamento: {worst_segment[1]:.1f}%
+                    - **Ação:** Investigue causas e crie programa de retenção!
+                    """)
+
+            # Exportar Scores
+            st.markdown("### 💾 Exportar Dados")
+            csv_scores = scores_df.to_csv(index=False, encoding='utf-8-sig', sep=';')
+            st.download_button(
+                label="📥 Baixar Scores Completos (CSV)",
+                data=csv_scores,
+                file_name="customer_scores.csv",
+                mime="text/csv"
+            )
+
+        except Exception as e:
+            st.error(f"Erro ao calcular scores: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+
+    with tab5:
         st.subheader("💡 Recomendações Estratégicas Acionáveis")
 
         # Calcular insights detalhados (robusto em relação ao schema)
@@ -2102,7 +2376,7 @@ def show_advanced_analytics(data):
         st.markdown("""
         **O que você vai descobrir:**
         - Produtos com melhor margem de lucro
-        - Classificação BCG: Estrela, Vaca Leiteira, Oportunidade, Peso Morto
+        - Classificação BCG: Alta Receita + Alta Margem, Alta Receita + Baixa Margem, Oportunidade, Baixa Receita + Baixa Margem
         - Produtos com margem baixa que precisam de ação
         - Lucro total estimado por produto
         """)
@@ -2173,9 +2447,9 @@ def show_advanced_analytics(data):
                     },
                     color_discrete_map={
                         'Estrela (Alta Receita + Alta Margem)': '#28a745',
-                        'Vaca Leiteira (Alta Receita + Baixa Margem)': '#ffc107',
+                        'Alta Receita + Baixa Margem': '#ffc107',
                         'Oportunidade (Baixa Receita + Alta Margem)': '#17a2b8',
-                        'Peso Morto (Baixa Receita + Baixa Margem)': '#dc3545'
+                        'Baixa Receita + Baixa Margem': '#dc3545'
                     }
                 )
 
@@ -3302,10 +3576,10 @@ def show_help():
                 **Vá em: 🚀 Ferramentas Pro → Aba Rentabilidade**
 
                 **Matriz BCG mostra 4 tipos de produto:**
-                - ⭐ **Estrela:** Alta receita + Alta margem = PERFEITO!
-                - 🐄 **Vaca Leiteira:** Alta receita + Baixa margem = Aumentar preço
+                - ⭐ **Alta Receita + Alta Margem:** Alta receita + Alta margem = PERFEITO!
+                - 🐄 **Alta Receita + Baixa Margem:** Alta receita + Baixa margem = Aumentar preço
                 - 💡 **Oportunidade:** Baixa receita + Alta margem = Investir em marketing
-                - ⚠️ **Peso Morto:** Baixa receita + Baixa margem = DESCONTINUAR
+                - ⚠️ **Baixa Receita + Baixa Margem:** Baixa receita + Baixa margem = DESCONTINUAR
 
                 **Produtos com margem <25%:**
                 - Lista automática de produtos em risco
@@ -3403,10 +3677,10 @@ def show_help():
 
             # Matriz BCG
             "BCG Matrix": "Matriz de classificação de produtos",
-            "Estrela": "Produto de alta receita e alta margem",
-            "Vaca Leiteira": "Produto de alta receita mas baixa margem",
+            "Alta Receita + Alta Margem": "Produto de alta receita e alta margem",
+            "Alta Receita + Baixa Margem": "Produto de alta receita mas baixa margem",
             "Oportunidade": "Produto de baixa receita mas alta margem",
-            "Peso Morto": "Produto de baixa receita e baixa margem",
+            "Baixa Receita + Baixa Margem": "Produto de baixa receita e baixa margem",
 
             # Jornada do Cliente
             "Conversão": "% de clientes que passam de uma etapa para outra",

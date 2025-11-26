@@ -56,14 +56,13 @@ class ProfitabilityAnalyzer:
             margem = row['margem_percentual']
 
             if receita > product_sales['receita_total'].quantile(0.75) and margem > 40:
-                return 'Estrela (Alta Receita + Alta Margem)'
+                return 'Alta Receita + Alta Margem'
             elif receita > product_sales['receita_total'].quantile(0.75) and margem <= 40:
-                return 'Vaca Leiteira (Alta Receita + Baixa Margem)'
+                return 'Alta Receita + Baixa Margem'
             elif receita <= product_sales['receita_total'].quantile(0.75) and margem > 40:
                 return 'Oportunidade (Baixa Receita + Alta Margem)'
             else:
-                return 'Peso Morto (Baixa Receita + Baixa Margem)'
-
+                return 'Baixa Receita + Baixa Margem'
         product_sales['classificacao'] = product_sales.apply(classify_profitability, axis=1)
 
         # Adicionar nome do produto se disponível
