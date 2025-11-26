@@ -650,9 +650,9 @@ def show_models():
     st.markdown('<h3><i class="fas fa-bullseye icon"></i> Sistema Preditivo Completo</h3>', unsafe_allow_html=True)
 
     # Sub-tabs para diferentes tipos de predição
-    pred_tab1, pred_tab2, pred_tab3, pred_tab4 = st.tabs([
+    pred_tab1, pred_tab3, pred_tab4 = st.tabs([
         "Predição Individual",
-        "Predição em Lote",
+        # "Predição em Lote",
         "Predição de Vendas",
         "Recomendação de Produtos"
     ])
@@ -661,9 +661,9 @@ def show_models():
         from pages_prediction import show_cancelamento_prediction
         show_cancelamento_prediction()
 
-    with pred_tab2:
-        from pages_prediction import show_batch_prediction
-        show_batch_prediction()
+    # with pred_tab2:
+    #     from pages_prediction import show_batch_prediction
+    #     show_batch_prediction()
 
     with pred_tab3:
         from pages_prediction import show_sales_prediction
