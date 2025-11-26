@@ -137,6 +137,7 @@ def main():
             "Análise Exploratória": "📊 Gráficos e Tendências",
             "Modelos e Predições": "🔮 Previsões Inteligentes",
             "Insights de Negócio": "💡 Recomendações",
+            "Oportunidades de Negócio": "🎯 Análises Estratégicas",
             "Ajuda": "❓ Ajuda e Glossário",
             "Configurações": "⚙️ Atualizar Dados"
         }
@@ -211,6 +212,8 @@ def main():
         show_models()
     elif page == "Insights de Negócio":
         show_business_insights(data)
+    elif page == "Oportunidades de Negócio":
+        show_opportunities(data)
     elif page == "Ajuda":
         show_help()
     elif page == "Configurações":
@@ -1311,6 +1314,743 @@ def show_business_insights(data):
             "💡 **DICA DE OURO:** Use este dashboard toda semana! "
             "Dados sem ação não geram resultado. Escolha 2-3 ações prioritárias e execute com consistência."
         )
+
+
+def show_opportunities(data):
+    """Página de Oportunidades de Negócio com 3 análises estratégicas"""
+
+    st.header("🎯 Oportunidades de Negócio - Análises Estratégicas")
+
+    st.info("""
+    **Descubra oportunidades concretas para aumentar suas vendas!**
+
+    Esta seção oferece 3 análises práticas:
+    - **📅 Sazonalidade:** Identifique padrões de venda e planeje seu estoque
+    - **📦 Gestão de Estoque:** Detecte produtos parados e otimize giro
+    - **👑 Clientes VIP:** Foque nos clientes mais valiosos e evite perdê-los
+    """)
+
+    # Importar os analisadores
+    try:
+        import sys
+        from pathlib import Path
+        sys.path.append(str(Path(__file__).parent / 'src'))
+        from visualization.advanced_analytics import SeasonalityAnalyzer, InventoryManager, VIPAnalyzer
+    except ImportError as e:
+        st.error(f"Erro ao carregar módulo de análises avançadas: {e}")
+        return
+
+    # Criar tabs para as 3 análises
+    tab1, tab2, tab3 = st.tabs([
+        "📅 Análise de Sazonalidade",
+        "📦 Gestão de Estoque",
+        "👑 Clientes VIP"
+    ])
+
+    with tab1:
+        st.subheader("📅 Análise de Sazonalidade e Previsão de Demanda")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Quais meses vendem mais e vendem menos
+        - Padrões de venda por produto
+        - Previsão de demanda para os próximos meses
+        - Quando preparar estoque extra
+        """)
+
+        try:
+            analyzer = SeasonalityAnalyzer(data)
+
+            # Padrões mensais
+            monthly = analyzer.get_monthly_patterns()
+
+            if not monthly.empty:
+                st.markdown("#### 📊 Vendas Mensais ao Longo do Tempo")
+
+                # Gráfico de vendas mensais
+                fig = go.Figure()
+
+                for ano in monthly['ano'].unique():
+                    df_ano = monthly[monthly['ano'] == ano]
+                    fig.add_trace(go.Scatter(
+                        x=df_ano['mes'],
+                        y=df_ano['receita'],
+                        mode='lines+markers',
+                        name=f'{int(ano)}',
+                        hovertemplate='%{x}/%{name}<br>Receita: R$ %{y:,.2f}<extra></extra>'
+                    ))
+
+                fig.update_layout(
+                    title='Receita por Mês',
+                    xaxis_title='Mês',
+                    yaxis_title='Receita (R$)',
+                    template='plotly_white',
+                    hovermode='x unified'
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Identificar meses de pico
+                peaks = analyzer.identify_peak_months()
+
+                if peaks:
+                    col1, col2, col3 = st.columns(3)
+
+                    with col1:
+                        st.metric(
+                            "🔥 Melhor Mês",
+                            peaks.get('melhor_mes', 'N/A'),
+                            f"R$ {peaks.get('melhor_receita', 0):,.2f}"
+                        )
+
+                    with col2:
+                        st.metric(
+                            "📉 Pior Mês",
+                            peaks.get('pior_mes', 'N/A'),
+                            f"R$ {peaks.get('pior_receita', 0):,.2f}"
+                        )
+
+                    with col3:
+                        st.metric(
+                            "📊 Variação",
+                            f"{peaks.get('variacao_percentual', 0):.1f}%",
+                            "diferença pico/baixa"
+                        )
+
+                    # Recomendações baseadas em sazonalidade
+                    st.markdown("#### 💡 Recomendações Estratégicas")
+
+                    melhor_mes = peaks.get('melhor_mes')
+                    pior_mes = peaks.get('pior_mes')
+
+                    st.success(f"""
+                    **✅ {melhor_mes} é seu mês de ouro!**
+                    - Prepare estoque extra 2 semanas antes
+                    - Lance produtos premium neste período
+                    - Invista mais em marketing em {melhor_mes}
+                    - Contrate reforço temporário se necessário
+                    """)
+
+                    st.warning(f"""
+                    **⚠️ {pior_mes} precisa de atenção!**
+                    - Faça promoções agressivas em {pior_mes}
+                    - Crie campanhas temáticas para aquecer vendas
+                    - Ofereça combos/kits com desconto
+                    - Use este período para limpar estoque parado
+                    """)
+
+                # Previsão de demanda
+                st.markdown("#### 🔮 Previsão de Demanda (Próximos 3 Meses)")
+
+                forecast = analyzer.demand_forecast_simple(months_ahead=3)
+
+                if not forecast.empty:
+                    forecast['mes_ano'] = forecast.apply(lambda x: f"{int(x['mes'])}/{int(x['ano'])}", axis=1)
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        st.dataframe(
+                            forecast[['mes_ano', 'receita_prevista', 'unidades_previstas']].rename(columns={
+                                'mes_ano': 'Mês/Ano',
+                                'receita_prevista': 'Receita Prevista (R$)',
+                                'unidades_previstas': 'Unidades Previstas'
+                            }),
+                            use_container_width=True
+                        )
+
+                    with col2:
+                        st.info("""
+                        **Como usar esta previsão:**
+
+                        ✅ **Planeje compras:** Peça estoque com antecedência baseado nas unidades previstas
+
+                        ✅ **Gestão de caixa:** Prepare o capital de giro necessário
+
+                        ✅ **Equipe:** Ajuste escala de funcionários conforme demanda
+
+                        📝 **Nota:** Esta é uma previsão simples baseada em média móvel. Para maior precisão, acompanhe tendências semanalmente.
+                        """)
+                else:
+                    st.info("Dados insuficientes para gerar previsão (mínimo 3 meses de histórico)")
+
+                # Sazonalidade por produto
+                st.markdown("#### 🍷 Sazonalidade por Produto")
+
+                product_season = analyzer.product_seasonality()
+
+                if not product_season.empty:
+                    # Top 10 produtos com seu mês de pico
+                    top_seasonal = product_season.nlargest(10, 'quantidade_pico')
+
+                    meses_nome = {
+                        1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril',
+                        5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
+                        9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
+                    }
+
+                    top_seasonal['mes_nome'] = top_seasonal['mes_pico'].map(meses_nome)
+
+                    # Adicionar nome do produto se disponível
+                    if 'nome' in data.columns:
+                        product_names = data.groupby('produto_id')['nome'].first().reset_index()
+                        top_seasonal = top_seasonal.merge(product_names, on='produto_id', how='left')
+                        display_col = 'nome'
+                    else:
+                        top_seasonal['nome'] = top_seasonal['produto_id'].astype(str)
+                        display_col = 'nome'
+
+                    st.dataframe(
+                        top_seasonal[[display_col, 'mes_nome', 'quantidade_pico']].rename(columns={
+                            display_col: 'Produto',
+                            'mes_nome': 'Mês de Pico',
+                            'quantidade_pico': 'Quantidade no Pico'
+                        }),
+                        use_container_width=True
+                    )
+
+                    st.success("""
+                    💡 **Como usar:**
+                    - Garanta estoque extra desses produtos 1 mês antes do pico
+                    - Crie campanhas de marketing focadas nesses produtos no mês de pico
+                    - Negocie melhores preços com fornecedores comprando antecipado
+                    """)
+                else:
+                    st.info("Não há dados suficientes para análise de sazonalidade por produto")
+            else:
+                st.warning("Não há dados de data para análise de sazonalidade. Verifique se a coluna 'data_compra' está presente.")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de sazonalidade: {str(e)}")
+
+    with tab2:
+        st.subheader("📦 Gestão Inteligente de Estoque")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Produtos parados (sem venda há muito tempo)
+        - Taxa de giro de cada produto
+        - Sugestões de promoções para liquidar estoque
+        - Alertas de produtos em risco
+        """)
+
+        try:
+            inventory = InventoryManager(data, dias_estoque_parado=30)
+
+            # Alertas gerais
+            alerts = inventory.stock_alerts()
+
+            st.markdown("#### 🚨 Alertas de Estoque")
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.metric(
+                    "Produtos Parados",
+                    alerts.get('produtos_parados', 0),
+                    "≥30 dias sem venda"
+                )
+
+            with col2:
+                st.metric(
+                    "Receita em Risco",
+                    f"R$ {alerts.get('receita_em_risco', 0):,.2f}",
+                    "potencial perdido"
+                )
+
+            with col3:
+                st.metric(
+                    "Alto Giro",
+                    alerts.get('produtos_alto_giro', 0),
+                    "produtos"
+                )
+
+            with col4:
+                st.metric(
+                    "Baixo Giro",
+                    alerts.get('produtos_baixo_giro', 0),
+                    "produtos"
+                )
+
+            # Produtos parados
+            st.markdown("#### ⏸️ Produtos Parados (Sem Venda ≥30 Dias)")
+
+            slow_products = inventory.identify_slow_products()
+
+            if not slow_products.empty:
+                # Mostrar top 20 produtos parados
+                display_cols = ['produto_id', 'dias_parado']
+                rename_cols = {'produto_id': 'Produto ID', 'dias_parado': 'Dias Parado'}
+
+                if 'nome' in slow_products.columns:
+                    display_cols.insert(1, 'nome')
+                    rename_cols['nome'] = 'Produto'
+
+                if 'receita_potencial_perdida' in slow_products.columns:
+                    display_cols.append('receita_potencial_perdida')
+                    rename_cols['receita_potencial_perdida'] = 'Receita Potencial Perdida (R$)'
+
+                st.dataframe(
+                    slow_products.head(20)[display_cols].rename(columns=rename_cols),
+                    use_container_width=True
+                )
+
+                st.error(f"""
+                **⚠️ AÇÃO URGENTE NECESSÁRIA!**
+
+                Você tem {len(slow_products)} produtos parados por 30+ dias.
+                Receita potencial perdida: R$ {alerts.get('receita_em_risco', 0):,.2f}
+
+                **O que fazer AGORA:**
+                1. 🔥 Criar promoção "Queima de Estoque" para os top 10 produtos parados
+                2. 📧 Enviar email marketing destacando esses produtos
+                3. 🎁 Criar combos/kits incluindo produtos parados
+                4. 💰 Considerar desconto de 15-30% para giro rápido
+                """)
+            else:
+                st.success("✅ Ótimo! Nenhum produto parado detectado.")
+
+            # Taxa de giro
+            st.markdown("#### 🔄 Taxa de Giro de Estoque")
+
+            st.info("""
+            **O que é Giro de Estoque:**
+            - **Alto Giro** (≥10/mês): Produtos que vendem muito rápido - mantenha estoque sempre!
+            - **Médio Giro** (5-10/mês): Produtos com venda regular - monitore semanalmente
+            - **Baixo Giro** (<5/mês): Produtos que vendem devagar - candidatos a promoção
+            """)
+
+            turnover = inventory.calculate_turnover_rate()
+
+            if not turnover.empty:
+                # Gráfico de giro por classificação
+                turnover_summary = turnover['classificacao'].value_counts().reset_index()
+                turnover_summary.columns = ['classificacao', 'quantidade']
+
+                fig = px.pie(
+                    turnover_summary,
+                    names='classificacao',
+                    values='quantidade',
+                    title='Distribuição de Produtos por Taxa de Giro',
+                    color_discrete_map={
+                        'Alto Giro': '#28a745',
+                        'Médio Giro': '#ffc107',
+                        'Baixo Giro': '#dc3545'
+                    }
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Tabela detalhada
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.markdown("**🔥 Top 10 - Alto Giro (Estrelas)**")
+                    high_turnover = turnover[turnover['classificacao'] == 'Alto Giro'].head(10)
+
+                    if not high_turnover.empty:
+                        display_cols = ['produto_id', 'giro_mensal']
+                        if 'nome' in high_turnover.columns:
+                            display_cols.insert(1, 'nome')
+
+                        st.dataframe(
+                            high_turnover[display_cols],
+                            use_container_width=True
+                        )
+
+                        st.success("💡 **Ação:** NUNCA deixe esses produtos faltarem! São seus best-sellers.")
+                    else:
+                        st.info("Nenhum produto com alto giro identificado.")
+
+                with col2:
+                    st.markdown("**⚠️ Top 10 - Baixo Giro (Atenção)**")
+                    low_turnover = turnover[turnover['classificacao'] == 'Baixo Giro'].head(10)
+
+                    if not low_turnover.empty:
+                        display_cols = ['produto_id', 'giro_mensal']
+                        if 'nome' in low_turnover.columns:
+                            display_cols.insert(1, 'nome')
+
+                        st.dataframe(
+                            low_turnover[display_cols],
+                            use_container_width=True
+                        )
+
+                        st.warning("💡 **Ação:** Avalie se vale a pena manter esses produtos. Considere promoção ou descontinuar.")
+                    else:
+                        st.success("Ótimo! Nenhum produto com baixo giro extremo.")
+            else:
+                st.info("Não há dados suficientes para calcular taxa de giro.")
+
+            # Sugestões de promoção
+            st.markdown("#### 🎯 Sugestões de Promoção")
+
+            promo_suggestions = inventory.suggest_promotions()
+
+            if not promo_suggestions.empty:
+                st.markdown(f"**Encontramos {len(promo_suggestions)} produtos que precisam de promoção urgente!**")
+
+                display_cols = ['produto_id', 'dias_parado', 'desconto_sugerido', 'urgencia']
+                rename_cols = {
+                    'produto_id': 'Produto ID',
+                    'dias_parado': 'Dias Parado',
+                    'desconto_sugerido': 'Desconto Sugerido',
+                    'urgencia': 'Urgência'
+                }
+
+                if 'nome' in promo_suggestions.columns:
+                    display_cols.insert(1, 'nome')
+                    rename_cols['nome'] = 'Produto'
+
+                if 'receita_potencial_perdida' in promo_suggestions.columns:
+                    display_cols.append('receita_potencial_perdida')
+                    rename_cols['receita_potencial_perdida'] = 'Receita em Risco (R$)'
+
+                st.dataframe(
+                    promo_suggestions[display_cols].rename(columns=rename_cols),
+                    use_container_width=True
+                )
+
+                # Plano de ação
+                urgentes = len(promo_suggestions[promo_suggestions['urgencia'] == 'URGENTE'])
+
+                if urgentes > 0:
+                    st.error(f"""
+                    **🔥 {urgentes} PRODUTOS EM SITUAÇÃO URGENTE!**
+
+                    **Plano de Ação - Próximos 7 Dias:**
+
+                    **Dia 1-2:** Criar campanha de email marketing "Liquidação Relâmpago"
+                    - Destacar os {min(5, urgentes)} produtos mais urgentes
+                    - Desconto de 20-30%
+                    - Frete grátis acima de 2 unidades
+
+                    **Dia 3-5:** Posts nas redes sociais
+                    - Mostrar produtos em promoção
+                    - Stories com countdown de oferta
+                    - Engajamento com sorteios
+
+                    **Dia 6-7:** Promoção de combo
+                    - "Leve 3, Pague 2" nos produtos parados
+                    - Combinar com best-sellers para aumentar ticket
+
+                    📊 **Meta:** Reduzir estoque parado em 50% em 2 semanas
+                    """)
+
+                # Botão de download
+                csv = promo_suggestions.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 Baixar lista completa de produtos para promoção (CSV)',
+                    data=csv,
+                    file_name='produtos_promocao.csv',
+                    mime='text/csv'
+                )
+            else:
+                st.success("✅ Excelente! Seu estoque está girando bem. Nenhuma promoção urgente necessária.")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de estoque: {str(e)}")
+
+    with tab3:
+        st.subheader("👑 Análise de Clientes VIP")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Quem são seus clientes mais valiosos (Top 20%)
+        - VIPs inativos que podem estar em risco
+        - Programa de fidelidade com tiers e benefícios
+        - Quanto os VIPs contribuem para sua receita
+        """)
+
+        try:
+            vip_analyzer = VIPAnalyzer(data)
+
+            # Contribuição dos VIPs
+            st.markdown("#### 💰 Contribuição dos VIPs para o Negócio")
+
+            contribution = vip_analyzer.vip_contribution_analysis()
+
+            if contribution:
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        "Clientes VIP",
+                        contribution.get('num_vips', 0),
+                        f"{contribution.get('percent_vips', 0):.1f}% do total"
+                    )
+
+                with col2:
+                    st.metric(
+                        "Receita VIPs",
+                        f"R$ {contribution.get('receita_vips', 0):,.2f}",
+                        f"{contribution.get('percent_receita_vips', 0):.1f}% do total"
+                    )
+
+                with col3:
+                    st.metric(
+                        "Ticket Médio VIP",
+                        f"R$ {contribution.get('ticket_medio_vip', 0):.2f}"
+                    )
+
+                with col4:
+                    st.metric(
+                        "Ticket Médio Geral",
+                        f"R$ {contribution.get('ticket_medio_geral', 0):.2f}"
+                    )
+
+                # Insight da Regra 80/20
+                percent_receita = contribution.get('percent_receita_vips', 0)
+
+                if percent_receita >= 70:
+                    st.success(f"""
+                    **🎯 Regra de Pareto Confirmada!**
+
+                    Seus top 20% clientes geram {percent_receita:.1f}% da receita!
+
+                    **Isso significa:**
+                    - ✅ Seu negócio está saudável e previsível
+                    - ✅ Você sabe quem são seus clientes-chave
+                    - ⚠️ CUIDADO: Perder um VIP tem impacto ENORME
+
+                    **Prioridade máxima:** Manter esses VIPs felizes e ativos!
+                    """)
+                else:
+                    st.info(f"""
+                    **📊 Análise da Base de Clientes**
+
+                    Seus top 20% geram {percent_receita:.1f}% da receita.
+
+                    **Oportunidade:** Trabalhar para aumentar o valor dos VIPs!
+                    - Criar programa de benefícios exclusivos
+                    - Oferecer produtos premium
+                    - Eventos e degustações VIP
+                    """)
+
+            # Listagem de VIPs
+            st.markdown("#### 👑 Seus Clientes VIP (Top 20%)")
+
+            vips = vip_analyzer.identify_vip_customers(top_percent=20)
+
+            if not vips.empty:
+                # Distribuição por tier
+                tier_counts = vips['tier_vip'].value_counts()
+
+                col1, col2 = st.columns([2, 1])
+
+                with col1:
+                    # Tabela de VIPs
+                    display_cols = ['cliente_id', 'tier_vip', 'receita_total', 'num_compras', 'ticket_medio']
+                    rename_cols = {
+                        'cliente_id': 'Cliente ID',
+                        'tier_vip': 'Tier',
+                        'receita_total': 'Receita Total (R$)',
+                        'num_compras': 'Num. Compras',
+                        'ticket_medio': 'Ticket Médio (R$)'
+                    }
+
+                    if 'nome' in vips.columns:
+                        display_cols.insert(1, 'nome')
+                        rename_cols['nome'] = 'Nome'
+
+                    if 'cidade' in vips.columns:
+                        display_cols.append('cidade')
+                        rename_cols['cidade'] = 'Cidade'
+
+                    st.dataframe(
+                        vips.head(30)[display_cols].rename(columns=rename_cols),
+                        use_container_width=True
+                    )
+
+                with col2:
+                    # Gráfico de pizza dos tiers
+                    tier_df = pd.DataFrame({
+                        'tier': tier_counts.index,
+                        'quantidade': tier_counts.values
+                    })
+
+                    fig = px.pie(
+                        tier_df,
+                        names='tier',
+                        values='quantidade',
+                        title='VIPs por Tier',
+                        color_discrete_map={
+                            'Platinum': '#E5E4E2',
+                            'Gold': '#FFD700',
+                            'Silver': '#C0C0C0'
+                        }
+                    )
+
+                    st.plotly_chart(fig, use_container_width=True)
+
+                # Botão de download
+                csv = vips.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 Baixar lista completa de VIPs (CSV)',
+                    data=csv,
+                    file_name='clientes_vip.csv',
+                    mime='text/csv'
+                )
+            else:
+                st.info("Não há dados suficientes para identificar VIPs.")
+
+            # VIPs inativos
+            st.markdown("#### ⚠️ VIPs em Risco (Inativos ≥30 Dias)")
+
+            inactive_vips = vip_analyzer.detect_inactive_vips(days_inactive=30)
+
+            if not inactive_vips.empty:
+                st.error(f"""
+                **🚨 ALERTA CRÍTICO!**
+
+                Você tem {len(inactive_vips)} VIPs inativos há 30+ dias!
+
+                Esses clientes representam R$ {inactive_vips['receita_total'].sum():,.2f} em receita histórica.
+                Perder esses clientes pode significar uma queda significativa no faturamento!
+                """)
+
+                # Tabela de VIPs inativos
+                display_cols = ['cliente_id', 'dias_inativo', 'risco_churn', 'receita_total', 'acao_sugerida']
+                rename_cols = {
+                    'cliente_id': 'Cliente ID',
+                    'dias_inativo': 'Dias Inativo',
+                    'risco_churn': 'Risco',
+                    'receita_total': 'Receita Total (R$)',
+                    'acao_sugerida': 'Ação Sugerida'
+                }
+
+                if 'nome' in inactive_vips.columns:
+                    display_cols.insert(1, 'nome')
+                    rename_cols['nome'] = 'Nome'
+
+                st.dataframe(
+                    inactive_vips[display_cols].rename(columns=rename_cols),
+                    use_container_width=True
+                )
+
+                # Plano de reativação
+                criticos = len(inactive_vips[inactive_vips['risco_churn'] == 'CRÍTICO'])
+
+                st.markdown(f"""
+                #### 🎯 Plano de Reativação Urgente
+
+                **Prioridade 1 - {criticos} VIPs em Risco CRÍTICO (90+ dias):**
+
+                **Dia 1:**
+                - 📞 Ligar PESSOALMENTE para cada um
+                - Script: "Sentimos sua falta! Preparamos uma oferta exclusiva..."
+                - Oferecer: Desconto de 25% + Frete Grátis + Brinde especial
+
+                **Dia 2-3:**
+                - 📧 Email personalizado com nome e histórico de compras
+                - Mostrar produtos similares aos que já compraram
+                - Voucher exclusivo válido por 7 dias
+
+                **Dia 4-7:**
+                - WhatsApp/SMS de lembrete do voucher
+                - Criar senso de urgência (oferta expira em X dias)
+
+                **Meta:** Reativar 50% dos VIPs críticos em 2 semanas
+                """)
+
+                # Botão de download
+                csv_inactive = inactive_vips.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 Baixar lista de VIPs inativos para campanha (CSV)',
+                    data=csv_inactive,
+                    file_name='vips_inativos_reativacao.csv',
+                    mime='text/csv'
+                )
+            else:
+                st.success("✅ Excelente! Todos os seus VIPs estão ativos!")
+
+            # Programa de Fidelidade
+            st.markdown("#### 🏆 Programa de Fidelidade - Tiers e Benefícios")
+
+            st.info("""
+            **Sistema de Tiers Automático**
+
+            Baseado na receita total e número de compras, seus clientes são automaticamente classificados em:
+            """)
+
+            loyalty = vip_analyzer.loyalty_program_tiers()
+
+            if not loyalty.empty:
+                # Resumo por tier
+                tier_summary = loyalty.groupby('tier').agg({
+                    'cliente_id': 'count',
+                    'receita_total': 'sum'
+                }).reset_index()
+
+                tier_summary.columns = ['Tier', 'Num. Clientes', 'Receita Total']
+
+                # Adicionar benefícios
+                tier_benefits = {
+                    'Platinum': '💎 Desconto 20% + Frete Grátis + Degustação Exclusiva',
+                    'Gold': '🥇 Desconto 15% + Frete Grátis',
+                    'Silver': '🥈 Desconto 10%',
+                    'Bronze': '🥉 Desconto 5% na próxima compra'
+                }
+
+                tier_summary['Benefícios'] = tier_summary['Tier'].map(tier_benefits)
+
+                st.dataframe(tier_summary, use_container_width=True)
+
+                # Visualização
+                fig = px.bar(
+                    tier_summary,
+                    x='Tier',
+                    y='Receita Total',
+                    title='Receita por Tier de Fidelidade',
+                    color='Tier',
+                    color_discrete_map={
+                        'Platinum': '#E5E4E2',
+                        'Gold': '#FFD700',
+                        'Silver': '#C0C0C0',
+                        'Bronze': '#CD7F32'
+                    }
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Implementação do programa
+                st.success("""
+                **💡 Como Implementar Este Programa:**
+
+                **1. Comunicação (Semana 1):**
+                - Anunciar o novo programa de fidelidade
+                - Email para toda base explicando os benefícios
+                - Informar tier atual de cada cliente
+
+                **2. Ativação (Semana 2):**
+                - Enviar códigos de desconto personalizados
+                - Criar badge/selo para emails (Platinum, Gold, etc)
+                - Atualizar site com informações do programa
+
+                **3. Engajamento (Mensalmente):**
+                - Email mostrando progresso até próximo tier
+                - Ofertas exclusivas por tier
+                - Eventos especiais para Platinum/Gold
+
+                **4. Monitoramento:**
+                - Acompanhar taxa de upgrade entre tiers
+                - Medir aumento no ticket médio por tier
+                - ROI do programa (aumento de receita vs custo de descontos)
+                """)
+
+                # Download da lista completa
+                csv_loyalty = loyalty.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 Baixar lista completa do programa de fidelidade (CSV)',
+                    data=csv_loyalty,
+                    file_name='programa_fidelidade_tiers.csv',
+                    mime='text/csv'
+                )
+            else:
+                st.info("Não há dados suficientes para criar programa de fidelidade.")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de VIPs: {str(e)}")
 
 
 def show_help():
