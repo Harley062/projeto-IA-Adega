@@ -1,10 +1,8 @@
 [theme]
-# Tema Escuro da Adega
-base = "dark"
-primaryColor = "#B8424C"
-backgroundColor = "#0E1117"
-secondaryBackgroundColor = "#262730"
-textColor = "#FAFAFA"
+primaryColor = "#722F37"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
 font = "sans serif"
 
 [server]

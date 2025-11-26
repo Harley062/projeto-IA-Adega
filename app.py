@@ -121,12 +121,12 @@ def main():
 
     # Sidebar
     with st.sidebar:
-        # Logo na sidebar
+        # Logo na sidebar (aumentada em 10%)
         logo_sidebar = load_image("assets/adega.png")
         if logo_sidebar:
-            st.image(logo_sidebar, width=120)
+            st.image(logo_sidebar, width=150, use_container_width=False)  # centralizar
         else:
-            st.image("https://img.icons8.com/color/96/000000/wine.png", width=100)
+            st.image("https://img.icons8.com/color/96/000000/wine.png", width=110, use_container_width=False)  # 100 + 10% = 110
 
         st.title("Menu de Navegação")
 
@@ -3090,89 +3090,455 @@ def show_advanced_analytics(data):
 
 
 def show_help():
-    """Página de Ajuda e Glossário"""
+    """Página de Ajuda e Glossário - ATUALIZADA com todas as funcionalidades"""
 
-    st.header("❓ Ajuda - Como Usar o Sistema")
+    st.header("❓ Ajuda - Como Usar o Sistema Completo")
 
     st.markdown("""
-    Bem-vindo à central de ajuda! Aqui você encontra respostas para as dúvidas mais comuns
-    e explicações sobre os termos usados no sistema.
+    Bem-vindo à central de ajuda! Aqui você encontra respostas para todas as dúvidas
+    sobre as **9 análises estratégicas** disponíveis no sistema.
     """)
 
     # Tabs para organizar o conteúdo
-    tab1, tab2, tab3 = st.tabs(["❓ Perguntas Frequentes", "📚 Glossário", "🚀 Guia Rápido"])
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "❓ Perguntas Frequentes",
+        "📚 Glossário Completo",
+        "🚀 Guia Rápido",
+        "📖 Guia de Funcionalidades"
+    ])
 
     with tab1:
-        st.subheader("Perguntas Frequentes (FAQ)")
+        st.subheader("Perguntas Frequentes (FAQ) - ATUALIZADO")
 
-        for faq_item in FAQ:
-            with st.expander(f"❓ {faq_item['pergunta']}"):
-                st.markdown(faq_item['resposta'])
+        faqs_atualizados = [
+            {
+                "pergunta": "O que cada página do sistema faz?",
+                "resposta": """
+                **O sistema tem 8 páginas principais:**
+
+                1. **🏠 Dashboard Principal** - Visão geral com KPIs e métricas gerais
+                2. **📊 Análise Exploratória** - Gráficos de distribuições, correlações e outliers
+                3. **🔮 Modelos e Predições** - Previsões de churn, vendas e recomendações
+                4. **💡 Insights de Negócio** - Recomendações estratégicas e análise RFM
+                5. **🎯 Oportunidades de Negócio** - Sazonalidade, Estoque e VIP (3 análises)
+                6. **🚀 Ferramentas Pro** - Rentabilidade, Cross-Selling, Jornada, Metas, Geografia e Reativação (6 análises)
+                7. **❓ Ajuda** - Esta página
+                8. **⚙️ Configurações** - Processar dados e gerenciar sistema
+
+                **Total: 9 análises estratégicas completas!**
+                """
+            },
+            {
+                "pergunta": "Como usar a Análise de Sazonalidade?",
+                "resposta": """
+                **Vá em: 🎯 Oportunidades de Negócio → Aba Sazonalidade**
+
+                **O que você verá:**
+                - Gráfico de vendas mensais ao longo do tempo
+                - Identificação automática do melhor e pior mês
+                - Previsão de demanda para os próximos 3 meses
+                - Quais produtos vendem mais em cada mês
+
+                **Como usar:**
+                1. Veja qual seu mês de ouro (maior venda)
+                2. Prepare estoque EXTRA 2 semanas antes
+                3. Invista mais em marketing nesse período
+                4. Nos meses fracos, faça promoções agressivas
+
+                **Dica:** Use a previsão para planejar compras com fornecedores!
+                """
+            },
+            {
+                "pergunta": "Como identificar produtos parados no estoque?",
+                "resposta": """
+                **Vá em: 🎯 Oportunidades de Negócio → Aba Gestão de Estoque**
+
+                **O que você verá:**
+                - Lista de produtos sem venda há 30+ dias
+                - Receita potencial perdida
+                - Taxa de giro (Alto/Médio/Baixo)
+                - Sugestões automáticas de desconto
+
+                **Plano de ação (7 dias):**
+                1. **Dia 1-2:** Email marketing "Queima de Estoque"
+                2. **Dia 3-5:** Posts nas redes sociais
+                3. **Dia 6-7:** Promoção de combo "Leve 3, Pague 2"
+
+                **Meta:** Girar 50% do estoque parado em 2 semanas
+
+                **Baixe o CSV** com a lista completa para usar na campanha!
+                """
+            },
+            {
+                "pergunta": "Como funciona o Programa de Fidelidade VIP?",
+                "resposta": """
+                **Vá em: 🎯 Oportunidades de Negócio → Aba Clientes VIP**
+
+                **4 Tiers Automáticos:**
+                - 💎 **Platinum** - Top 5%: Desconto 20% + Frete Grátis + Degustação
+                - 🥇 **Gold** - Top 15%: Desconto 15% + Frete Grátis
+                - 🥈 **Silver** - Top 30%: Desconto 10%
+                - 🥉 **Bronze** - Demais: Desconto 5%
+
+                **Como implementar:**
+                1. Baixe o CSV com a lista de clientes e tiers
+                2. Envie email informando o tier de cada cliente
+                3. Crie códigos de desconto personalizados
+                4. Acompanhe upgrades entre tiers mensalmente
+
+                **Benefício:** Aumenta ticket médio e retenção!
+                """
+            },
+            {
+                "pergunta": "Como usar Cross-Selling para aumentar vendas?",
+                "resposta": """
+                **Vá em: 🚀 Ferramentas Pro → Aba Cross-Selling**
+
+                **O que você verá:**
+                - Produtos frequentemente comprados juntos
+                - % de confiança da associação
+                - Sugestões automáticas de combos/kits
+
+                **Exemplo de Campanha:**
+                1. Nome: "Harmonização Perfeita"
+                2. Oferta: "Compre [Produto 1] + [Produto 2] com 10% OFF!"
+                3. Prazo: 7 dias
+                4. Canal: Email + Banner no site
+
+                **Resultado esperado:** Aumento de 20-30% no ticket médio
+
+                **Baixe o CSV** com sugestões prontas de combos!
+                """
+            },
+            {
+                "pergunta": "Como melhorar minha taxa de conversão (1ª → 2ª compra)?",
+                "resposta": """
+                **Vá em: 🚀 Ferramentas Pro → Aba Jornada do Cliente**
+
+                **Veja sua taxa atual e compare:**
+                - Abaixo de 30% = CRÍTICO 🚨
+                - 30-50% = Razoável ⚠️
+                - Acima de 50% = Excelente ✅
+
+                **Plano de retenção automático:**
+                1. **24h após 1ª compra:** Email de boas-vindas + cupom 10%
+                2. **7 dias:** "Como está gostando?" + pedir avaliação
+                3. **30 dias:** "Hora de reabastecer!" + frete grátis
+
+                **Descubra qual produto converte melhor** novos clientes e use em campanhas de aquisição!
+                """
+            },
+            {
+                "pergunta": "Como acompanhar minhas metas mensais?",
+                "resposta": """
+                **Vá em: 🚀 Ferramentas Pro → Aba Metas & KPIs**
+
+                **Configure suas metas:**
+                1. Digite meta de receita (ex: R$ 50.000)
+                2. Digite meta de clientes (ex: 100)
+
+                **O sistema calcula automaticamente:**
+                - Progresso atual vs meta
+                - Projeção para fim do mês
+                - Dias restantes
+                - Se vai bater a meta ou não
+
+                **Se meta em risco:**
+                - Receba plano de recuperação automático
+                - Quanto vender por dia para recuperar
+                - Quais ações tomar imediatamente
+
+                **Dica:** Atualize semanalmente para acompanhar evolução!
+                """
+            },
+            {
+                "pergunta": "Como identificar oportunidades de expansão geográfica?",
+                "resposta": """
+                **Vá em: 🚀 Ferramentas Pro → Aba Geografia**
+
+                **O sistema identifica:**
+                - **Mercados Consolidados:** Continuar investindo
+                - **Mercados em Crescimento:** Acelerar investimento
+                - **Mercados Potenciais:** Oportunidade de expansão
+
+                **Oportunidades = Cidades com:**
+                - Poucos clientes atuais MAS
+                - Ticket médio alto (há demanda qualificada!)
+
+                **Plano de expansão pronto (6 meses):**
+                - **Meses 1-2:** Teste em 3 cidades (R$ 500-1000 cada)
+                - **Meses 3-4:** Consolidar nas que funcionaram
+                - **Meses 5-6:** Escalar e expandir
+
+                **Meta:** Dobrar número de cidades consolidadas
+                """
+            },
+            {
+                "pergunta": "Como reativar clientes inativos?",
+                "resposta": """
+                **Vá em: 🚀 Ferramentas Pro → Aba Reativação**
+
+                **Filtre por inatividade:** 30, 60 ou 90 dias
+
+                **3 Níveis de Prioridade:**
+                - 🔴 **Alta:** Clientes de alto valor - LIGAR pessoalmente
+                - 🟡 **Média:** Email personalizado
+                - 🟢 **Baixa:** Email genérico de campanha
+
+                **Campanha pronta em 7 dias:**
+                1. Selecione quantos clientes incluir (ex: 50)
+                2. Baixe o CSV com lista, ofertas e canais
+                3. **Dia 1:** Ligar para alta prioridade
+                4. **Dia 2:** Email para média prioridade
+                5. **Dia 3-4:** WhatsApp/SMS
+                6. **Dia 5-7:** Lembrete de expiração
+
+                **Meta:** Reativar 30% dos clientes em 2 semanas
+                """
+            },
+            {
+                "pergunta": "Como melhorar minha margem de lucro?",
+                "resposta": """
+                **Vá em: 🚀 Ferramentas Pro → Aba Rentabilidade**
+
+                **Matriz BCG mostra 4 tipos de produto:**
+                - ⭐ **Estrela:** Alta receita + Alta margem = PERFEITO!
+                - 🐄 **Vaca Leiteira:** Alta receita + Baixa margem = Aumentar preço
+                - 💡 **Oportunidade:** Baixa receita + Alta margem = Investir em marketing
+                - ⚠️ **Peso Morto:** Baixa receita + Baixa margem = DESCONTINUAR
+
+                **Produtos com margem <25%:**
+                - Lista automática de produtos em risco
+                - Ações recomendadas (renegociar, aumentar preço, descontinuar)
+
+                **Plano de ação:**
+                1. Renegociar com fornecedores (margem <20%)
+                2. Aumentar preços 2-5% (margem 20-25%)
+                3. Descontinuar "peso morto"
+
+                **Meta:** Margem média >35% em 3 meses
+                """
+            },
+            {
+                "pergunta": "Quais análises devo usar diariamente vs semanalmente?",
+                "resposta": """
+                **DIÁRIO (5 min):**
+                - 🎯 **Metas & KPIs:** Progresso do dia vs meta
+                - 📊 **Dashboard Principal:** Números gerais
+
+                **SEMANAL (30 min):**
+                - 👑 **Clientes VIP:** VIPs inativos para ligar
+                - 📦 **Estoque:** Produtos parados
+                - 📞 **Reativação:** Criar campanha semanal
+
+                **QUINZENAL (1h):**
+                - 🛒 **Cross-Selling:** Criar novos combos
+                - 🔄 **Jornada:** Taxa de conversão
+                - 💰 **Rentabilidade:** Margem por produto
+
+                **MENSAL (2h):**
+                - 📅 **Sazonalidade:** Planejar próximo mês
+                - 🗺️ **Geografia:** Avaliar expansão
+                - 💡 **Insights de Negócio:** Estratégia geral
+
+                **Resultado:** Decisões baseadas em dados, não achismo!
+                """
+            }
+        ]
+
+        for faq in faqs_atualizados:
+            with st.expander(f"❓ {faq['pergunta']}"):
+                st.markdown(faq['resposta'])
 
     with tab2:
-        st.subheader("Glossário de Termos")
+        st.subheader("📚 Glossário Completo - Todos os Termos")
 
-        st.info("**Traduzimos os termos técnicos para você!** Aqui está o que cada termo significa:")
+        st.info("**Traduzimos TODOS os termos técnicos para você!** Use a busca ou navegue por categoria.")
 
-        # Busca no glossário
+        # Busca no glossário expandido
         busca = st.text_input("🔍 Buscar termo no glossário", placeholder="Digite um termo...")
 
+        # Glossário completo expandido
+        glossario_completo = {
+            # Machine Learning
+            "Churn": "Cancelamento de cliente/assinatura",
+            "Machine Learning": "Inteligência Artificial que aprende com dados",
+            "Model": "Sistema inteligente treinado",
+            "Pipeline": "Processamento automático de dados",
+            "Feature Engineering": "Criação de variáveis para análise",
+            "Accuracy": "Precisão geral do sistema (%)",
+            "Precision": "Taxa de acertos positivos",
+            "Recall": "Taxa de detecção de casos",
+            "F1-Score": "Nota geral balanceada",
+            "ROC-AUC": "Precisão da classificação",
+
+            # RFM e Análise de Clientes
+            "RFM": "Recency (Recência) + Frequency (Frequência) + Monetary (Monetário)",
+            "Recency": "Há quanto tempo o cliente comprou pela última vez",
+            "Frequency": "Quantas vezes o cliente compra",
+            "Monetary": "Quanto dinheiro o cliente gasta",
+            "Lifetime Value": "Valor total que o cliente gasta ao longo da vida",
+            "Engagement Score": "Nível de engajamento do cliente (1-10)",
+
+            # Vendas e Produtos
+            "Ticket Médio": "Valor médio de cada compra",
+            "Cross-Selling": "Venda de produtos complementares juntos",
+            "Upselling": "Venda de produto de maior valor",
+            "Bundle": "Combo/Kit de produtos",
+            "SKU": "Código único de cada produto",
+
+            # Estoque
+            "Giro de Estoque": "Quantas vezes o produto vende por mês",
+            "Alto Giro": "Produto que vende rápido (≥10/mês)",
+            "Baixo Giro": "Produto que vende devagar (<5/mês)",
+            "Ruptura": "Falta de produto em estoque",
+            "Estoque Parado": "Produto sem venda há muito tempo",
+
+            # Rentabilidade
+            "Margem": "% de lucro sobre o preço de venda",
+            "Margem Bruta": "Lucro antes de impostos e despesas",
+            "Margem Líquida": "Lucro após todos os custos",
+            "Break-even": "Ponto de equilíbrio (sem lucro nem prejuízo)",
+            "ROI": "Retorno sobre Investimento (%)",
+
+            # Matriz BCG
+            "BCG Matrix": "Matriz de classificação de produtos",
+            "Estrela": "Produto de alta receita e alta margem",
+            "Vaca Leiteira": "Produto de alta receita mas baixa margem",
+            "Oportunidade": "Produto de baixa receita mas alta margem",
+            "Peso Morto": "Produto de baixa receita e baixa margem",
+
+            # Jornada do Cliente
+            "Conversão": "% de clientes que passam de uma etapa para outra",
+            "Taxa de Retenção": "% de clientes que continuam comprando",
+            "Taxa de Churn": "% de clientes que cancelam/param de comprar",
+            "One-time Customer": "Cliente que comprou apenas uma vez",
+            "Cliente Recorrente": "Cliente que compra repetidamente",
+
+            # Cross-Selling e Análise de Cesta
+            "Cesta": "Conjunto de produtos comprados juntos",
+            "Associação": "Relação entre produtos comprados juntos",
+            "Confiança": "% das vezes que produtos são comprados juntos",
+            "Suporte": "Número mínimo de vezes que padrão ocorre",
+            "Compras Múltiplas": "Compras com mais de 1 produto",
+
+            # Geografia
+            "Mercado Consolidado": "Cidade com alta receita estabelecida",
+            "Mercado em Crescimento": "Cidade com receita média em expansão",
+            "Mercado Potencial": "Cidade com baixa receita mas alto potencial",
+            "Penetração": "% de mercado conquistado em uma região",
+            "Concentração": "% de receita vindo de poucos lugares",
+
+            # Metas e KPIs
+            "KPI": "Key Performance Indicator (Indicador-chave de Performance)",
+            "Meta": "Objetivo numérico a atingir",
+            "Projeção": "Estimativa de resultado futuro",
+            "Baseline": "Valor de referência/comparação",
+            "Benchmark": "Padrão de mercado para comparação",
+
+            # Reativação
+            "Cliente Inativo": "Cliente que não compra há X dias",
+            "Reativação": "Processo de trazer cliente inativo de volta",
+            "Win-back": "Campanha para recuperar clientes perdidos",
+            "Prioridade": "Nível de importância (Alta/Média/Baixa)",
+            "Risco de Churn": "Probabilidade de perder o cliente",
+
+            # Sazonalidade
+            "Sazonalidade": "Padrão de vendas que se repete em períodos",
+            "Pico": "Período de maior venda",
+            "Vale": "Período de menor venda",
+            "Tendência": "Direção geral das vendas (alta/baixa/estável)",
+            "Previsão de Demanda": "Estimativa de vendas futuras",
+
+            # Termos Gerais
+            "Dashboard": "Painel de visualização de dados",
+            "Insight": "Descoberta/oportunidade identificada nos dados",
+            "Outlier": "Valor muito diferente do padrão",
+            "Correlação": "Relação entre duas variáveis",
+            "Segmentação": "Divisão de clientes em grupos similares"
+        }
+
         if busca:
-            encontrados = [(t, s) for t, s in GLOSSARIO.items() if busca.lower() in t.lower() or busca.lower() in s.lower()]
+            encontrados = [(t, s) for t, s in glossario_completo.items() if busca.lower() in t.lower() or busca.lower() in s.lower()]
             if encontrados:
-                st.success(f"Encontrados {len(encontrados)} resultado(s):")
+                st.success(f"✅ Encontrados {len(encontrados)} resultado(s):")
                 for termo_tecnico, termo_simples in encontrados:
                     st.markdown(f"**{termo_tecnico}** → {termo_simples}")
             else:
-                st.warning("Nenhum termo encontrado. Tente outra palavra-chave.")
+                st.warning("❌ Nenhum termo encontrado. Tente outra palavra-chave.")
         else:
             # Organizar glossário por categorias
             col1, col2 = st.columns(2)
 
             with col1:
-                st.markdown("### 🤖 Termos de Inteligência Artificial")
-                ml_terms = {
-                    "Churn": "Cancelamento",
-                    "Machine Learning": "Inteligência Artificial",
-                    "Model": "Sistema Inteligente",
-                    "Pipeline": "Processamento",
-                    "Feature Engineering": "Preparação de Dados",
-                }
+                st.markdown("### 🤖 Machine Learning & IA")
+                ml_terms = {k: v for k, v in list(glossario_completo.items())[:11]}
                 for tecnico, simples in ml_terms.items():
                     st.markdown(f"• **{tecnico}** = {simples}")
 
-                st.markdown("### 📊 Métricas do Sistema")
-                metric_terms = {
-                    "Accuracy": "Precisão Geral",
-                    "Precision": "Taxa de Acerto",
-                    "Recall": "Taxa de Detecção",
-                    "F1-Score": "Nota Geral",
-                    "ROC-AUC": "Precisão do Sistema",
-                }
-                for tecnico, simples in metric_terms.items():
+                st.markdown("### 👥 RFM e Clientes")
+                rfm_terms = {k: v for k, v in list(glossario_completo.items())[11:17]}
+                for tecnico, simples in rfm_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 💰 Vendas e Produtos")
+                sales_terms = {k: v for k, v in list(glossario_completo.items())[17:22]}
+                for tecnico, simples in sales_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 📦 Estoque")
+                inventory_terms = {k: v for k, v in list(glossario_completo.items())[22:27]}
+                for tecnico, simples in inventory_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 💵 Rentabilidade")
+                profit_terms = {k: v for k, v in list(glossario_completo.items())[27:32]}
+                for tecnico, simples in profit_terms.items():
                     st.markdown(f"• **{tecnico}** = {simples}")
 
             with col2:
-                st.markdown("### 📈 Termos de Negócio")
-                business_terms = {
-                    "Lifetime Value": "Valor Total do Cliente",
-                    "RFM Analysis": "Análise RFM",
-                    "Engagement Score": "Nível de Engajamento",
-                    "Ticket Médio": "Valor Médio de Compra",
-                }
-                for tecnico, simples in business_terms.items():
+                st.markdown("### 📊 Matriz BCG")
+                bcg_terms = {k: v for k, v in list(glossario_completo.items())[32:37]}
+                for tecnico, simples in bcg_terms.items():
                     st.markdown(f"• **{tecnico}** = {simples}")
 
-                st.markdown("### 🔧 Operações")
-                ops_terms = {
-                    "Batch Prediction": "Análise em Lote",
-                    "Predict": "Prever",
-                }
-                for tecnico, simples in ops_terms.items():
+                st.markdown("### 🔄 Jornada do Cliente")
+                journey_terms = {k: v for k, v in list(glossario_completo.items())[37:42]}
+                for tecnico, simples in journey_terms.items():
                     st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 🛒 Cross-Selling")
+                basket_terms = {k: v for k, v in list(glossario_completo.items())[42:47]}
+                for tecnico, simples in basket_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 🗺️ Geografia")
+                geo_terms = {k: v for k, v in list(glossario_completo.items())[47:52]}
+                for tecnico, simples in geo_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+                st.markdown("### 🎯 Metas e KPIs")
+                kpi_terms = {k: v for k, v in list(glossario_completo.items())[52:57]}
+                for tecnico, simples in kpi_terms.items():
+                    st.markdown(f"• **{tecnico}** = {simples}")
+
+            st.markdown("### 📞 Reativação")
+            react_terms = {k: v for k, v in list(glossario_completo.items())[57:62]}
+            for tecnico, simples in react_terms.items():
+                st.markdown(f"• **{tecnico}** = {simples}")
+
+            st.markdown("### 📅 Sazonalidade")
+            season_terms = {k: v for k, v in list(glossario_completo.items())[62:67]}
+            for tecnico, simples in season_terms.items():
+                st.markdown(f"• **{tecnico}** = {simples}")
+
+            st.markdown("### 🔧 Termos Gerais")
+            general_terms = {k: v for k, v in list(glossario_completo.items())[67:]}
+            for tecnico, simples in general_terms.items():
+                st.markdown(f"• **{tecnico}** = {simples}")
 
     with tab3:
-        st.subheader("🚀 Guia Rápido - Primeiros Passos")
+        st.subheader("🚀 Guia Rápido - Primeiros Passos ATUALIZADO")
 
         st.markdown("""
         ### 1️⃣ Primeira Vez no Sistema
@@ -3185,18 +3551,20 @@ def show_help():
 
         2. **Processe os dados**
            - Vá em **"⚙️ Atualizar Dados"**
-           - Clique em **"▶️ Processar Dados"**
+           - Clique em **"▶️ Processar Dados"** ou execute `python scripts/pipeline.py`
            - Aguarde 2-5 minutos
 
-        3. **Explore o dashboard**
-           - Comece pela **"🏠 Visão Geral"**
-           - Veja os **"📊 Gráficos e Tendências"**
-           - Teste as **"🔮 Previsões Inteligentes"**
-           - Leia as **"💡 Recomendações"**
+        3. **Explore TODAS as análises**
+           - **🏠 Visão Geral** - Números gerais
+           - **📊 Gráficos e Tendências** - EDA completa
+           - **🔮 Previsões Inteligentes** - ML models
+           - **💡 Recomendações** - Insights de negócio
+           - **🎯 Análises Estratégicas** - Sazonalidade, Estoque, VIP
+           - **🚀 Ferramentas Pro** - Rentabilidade, Cross-Selling, Jornada, Metas, Geografia, Reativação
 
         ---
 
-        ### 2️⃣ Atalhos Úteis
+        ### 2️⃣ Atalhos Úteis - TODAS AS PÁGINAS
 
         | Preciso... | Vá para... |
         |------------|-----------|
@@ -3204,12 +3572,21 @@ def show_help():
         | Ver padrões nos dados | 📊 Gráficos e Tendências |
         | Prever cancelamentos | 🔮 Previsões Inteligentes |
         | Ter ideias de ações | 💡 Recomendações |
+        | **Planejar estoque por mês** | **🎯 → Sazonalidade** |
+        | **Produtos parados** | **🎯 → Gestão Estoque** |
+        | **Programa fidelidade** | **🎯 → Clientes VIP** |
+        | **Melhorar margem** | **🚀 → Rentabilidade** |
+        | **Criar combos** | **🚀 → Cross-Selling** |
+        | **Aumentar retenção** | **🚀 → Jornada Cliente** |
+        | **Acompanhar metas** | **🚀 → Metas & KPIs** |
+        | **Expandir cidades** | **🚀 → Geografia** |
+        | **Reativar clientes** | **🚀 → Reativação** |
         | Processar novos dados | ⚙️ Atualizar Dados |
         | Tirar dúvidas | ❓ Ajuda |
 
         ---
 
-        ### 3️⃣ Suporte
+        ### 3️⃣ Suporte e Problemas Comuns
 
         **Problemas comuns e soluções:**
 
@@ -3223,10 +3600,112 @@ def show_help():
           → Normal no primeiro processamento. Aguarde completar.
 
         - **"Não entendo um termo"**
-          → Veja a aba "📚 Glossário" acima
+          → Veja a aba "📚 Glossário Completo" acima com 70+ termos!
+
+        - **"Como usar funcionalidade X?"**
+          → Veja a aba "❓ Perguntas Frequentes" com 11 guias detalhados
+
+        - **"Quais análises usar?"**
+          → Veja a aba "📖 Guia de Funcionalidades" para escolher
         """)
 
-        st.success("🎯 **Lembre-se**: O sistema é uma ferramenta para ajudar você a tomar decisões melhores. Use seu conhecimento do negócio junto com os dados!")
+        st.success("🎯 **Lembre-se**: O sistema tem 9 análises completas! Explore todas para tomar decisões melhores baseadas em dados, não achismo!")
+
+    with tab4:
+        st.subheader("📖 Guia Completo de Funcionalidades")
+
+        st.info("**Escolha a análise certa para cada situação:**")
+
+        guide_sections = [
+            {
+                "titulo": "🎯 Oportunidades de Negócio",
+                "itens": [
+                    {
+                        "nome": "📅 Sazonalidade",
+                        "quando": "Quando planejar estoque, campanhas e promoções",
+                        "tempo": "Revisar: Mensal",
+                        "resultado": "Evitar ruptura e sobra de estoque, maximizar vendas nos picos"
+                    },
+                    {
+                        "nome": "📦 Gestão de Estoque",
+                        "quando": "Quando tiver produtos parados ou quiser otimizar giro",
+                        "tempo": "Revisar: Semanal",
+                        "resultado": "Reduzir capital parado, aumentar fluxo de caixa"
+                    },
+                    {
+                        "nome": "👑 Clientes VIP",
+                        "quando": "Quando quiser focar nos melhores clientes e criar programa fidelidade",
+                        "tempo": "Revisar: Semanal (VIPs inativos) + Mensal (programa)",
+                        "resultado": "Aumentar LTV, reduzir churn de alto valor"
+                    }
+                ]
+            },
+            {
+                "titulo": "🚀 Ferramentas Pro (Análises Avançadas)",
+                "itens": [
+                    {
+                        "nome": "💰 Rentabilidade",
+                        "quando": "Quando quiser aumentar margem e eliminar produtos não lucrativos",
+                        "tempo": "Revisar: Quinzenal",
+                        "resultado": "Aumentar margem média, focar em produtos estrela"
+                    },
+                    {
+                        "nome": "🛒 Cross-Selling",
+                        "quando": "Quando quiser aumentar ticket médio com combos",
+                        "tempo": "Revisar: Quinzenal",
+                        "resultado": "Aumentar valor médio da cesta em 20-30%"
+                    },
+                    {
+                        "nome": "🔄 Jornada do Cliente",
+                        "quando": "Quando quiser melhorar conversão de primeira para segunda compra",
+                        "tempo": "Revisar: Mensal",
+                        "resultado": "Aumentar taxa de retenção, mais clientes recorrentes"
+                    },
+                    {
+                        "nome": "🎯 Metas & KPIs",
+                        "quando": "Quando quiser acompanhar performance vs objetivos",
+                        "tempo": "Revisar: Diário (progresso) + Semanal (ajustes)",
+                        "resultado": "Manter foco, identificar problemas cedo, atingir metas"
+                    },
+                    {
+                        "nome": "🗺️ Geografia",
+                        "quando": "Quando quiser expandir para novas cidades ou consolidar mercados",
+                        "tempo": "Revisar: Mensal",
+                        "resultado": "Crescimento geográfico planejado, ROI melhor em marketing local"
+                    },
+                    {
+                        "nome": "📞 Reativação",
+                        "quando": "Quando tiver muitos clientes inativos para resgatar",
+                        "tempo": "Revisar: Semanal (criar campanhas)",
+                        "resultado": "Recuperar 30% dos inativos, aumentar receita sem custo de aquisição"
+                    }
+                ]
+            }
+        ]
+
+        for section in guide_sections:
+            st.markdown(f"### {section['titulo']}")
+
+            for item in section['itens']:
+                with st.expander(f"{item['nome']} - Quando usar?"):
+                    st.markdown(f"""
+                    **Quando usar:** {item['quando']}
+
+                    **Frequência recomendada:** {item['tempo']}
+
+                    **Resultado esperado:** {item['resultado']}
+                    """)
+
+        st.success("""
+        **💡 Dica de Ouro:**
+
+        Não precisa usar todas as análises todos os dias! Comece com:
+        1. **Diário:** Metas & KPIs (5 min)
+        2. **Semanal:** VIP, Estoque, Reativação (30 min)
+        3. **Mensal:** Sazonalidade, Geografia, Jornada (1-2h)
+
+        À medida que se familiarizar, adicione Cross-Selling e Rentabilidade!
+        """)
 
 
 def show_settings():
