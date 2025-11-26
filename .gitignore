@@ -52,3 +52,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+
+# Arquivos processados (devem estar em data/processed/)
+data/data_processed_*
+
+# Backups de assets
+assets/*_backup.*

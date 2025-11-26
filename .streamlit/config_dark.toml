@@ -1,7 +1,7 @@
 [theme]
-# Tema Escuro para a Adega
+# Tema Escuro da Adega
 base = "dark"
-primaryColor = "#B8424C"  # Tom mais suave de vinho para tema escuro
+primaryColor = "#B8424C"
 backgroundColor = "#0E1117"
 secondaryBackgroundColor = "#262730"
 textColor = "#FAFAFA"
