@@ -20,7 +20,7 @@ from utils.glossario import FAQ, GLOSSARIO
 
 # Configuração da página
 st.set_page_config(
-    page_title="Sistema de Análise - Adega",
+    page_title="Sistema de Análise apoio a decisão para Adega Bom Sabor",
     page_icon="🍷", 
     layout="wide",
     initial_sidebar_state="expanded"

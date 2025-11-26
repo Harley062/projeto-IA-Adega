@@ -66,8 +66,16 @@ class ProfitabilityAnalyzer:
         product_sales['classificacao'] = product_sales.apply(classify_profitability, axis=1)
 
         # Adicionar nome do produto se disponível
-        if 'nome' in self.data.columns:
-            product_info = self.data.groupby('produto_id')['nome'].first().reset_index()
+        # Procurar pela coluna correta de nome do produto
+        nome_col = None
+        for col in ['nome_produto', 'nome']:
+            if col in self.data.columns:
+                nome_col = col
+                break
+
+        if nome_col:
+            product_info = self.data.groupby('produto_id')[nome_col].first().reset_index()
+            product_info.columns = ['produto_id', 'nome']
             product_sales = product_sales.merge(product_info, on='produto_id', how='left')
 
         return product_sales.sort_values('lucro_total', ascending=False)
@@ -154,8 +162,15 @@ class BasketAnalyzer:
         )
 
         # Adicionar nomes dos produtos se disponível
-        if 'nome' in self.data.columns:
-            product_names = self.data.groupby('produto_id')['nome'].first().to_dict()
+        # Procurar pela coluna correta de nome do produto
+        nome_col = None
+        for col in ['nome_produto', 'nome']:
+            if col in self.data.columns:
+                nome_col = col
+                break
+
+        if nome_col:
+            product_names = self.data.groupby('produto_id')[nome_col].first().to_dict()
             pair_freq['nome_produto_1'] = pair_freq['produto_1'].map(product_names)
             pair_freq['nome_produto_2'] = pair_freq['produto_2'].map(product_names)
 
@@ -227,6 +242,22 @@ class CustomerJourneyAnalyzer:
         # Marcar primeira compra
         df['ordem_compra'] = df.groupby('cliente_id').cumcount() + 1
         df['primeira_compra'] = df['ordem_compra'] == 1
+
+        # Garantir que exista uma coluna de nome do cliente para facilitar exibição
+        # Procurar por nomes de coluna comuns e mapear pelo cliente_id
+        name_candidates = ['nome', 'nome_cliente', 'cliente_nome', 'nome_completo', 'nome_cliente_full']
+        name_col = next((c for c in name_candidates if c in self.data.columns), None)
+
+        if name_col:
+            names = self.data.groupby('cliente_id')[name_col].first().to_dict()
+            df['nome'] = df['cliente_id'].map(names)
+        else:
+            # como fallback, procurar qualquer coluna que contenha 'nome' no nome
+            for col in self.data.columns:
+                if 'nome' in col.lower() and col not in ['produto', 'nome_produto']:
+                    names = self.data.groupby('cliente_id')[col].first().to_dict()
+                    df['nome'] = df['cliente_id'].map(names)
+                    break
 
         return df
 
@@ -301,8 +332,16 @@ class CustomerJourneyAnalyzer:
         result = pd.DataFrame(conversion_data)
 
         # Adicionar nome do produto
-        if 'nome' in self.data.columns:
-            product_names = self.data.groupby('produto_id')['nome'].first().reset_index()
+        # Procurar pela coluna correta de nome do produto
+        nome_col = None
+        for col in ['nome_produto', 'nome']:
+            if col in self.data.columns:
+                nome_col = col
+                break
+
+        if nome_col:
+            product_names = self.data.groupby('produto_id')[nome_col].first().reset_index()
+            product_names.columns = ['produto_id', 'nome']
             result = result.merge(product_names, on='produto_id', how='left')
 
         return result.sort_values('taxa_retencao', ascending=False)
