@@ -138,6 +138,7 @@ def main():
             "Modelos e Predições": "🔮 Previsões Inteligentes",
             "Insights de Negócio": "💡 Recomendações",
             "Oportunidades de Negócio": "🎯 Análises Estratégicas",
+            "Análises Avançadas": "🚀 Ferramentas Pro",
             "Ajuda": "❓ Ajuda e Glossário",
             "Configurações": "⚙️ Atualizar Dados"
         }
@@ -214,6 +215,8 @@ def main():
         show_business_insights(data)
     elif page == "Oportunidades de Negócio":
         show_opportunities(data)
+    elif page == "Análises Avançadas":
+        show_advanced_analytics(data)
     elif page == "Ajuda":
         show_help()
     elif page == "Configurações":
@@ -2051,6 +2054,1039 @@ def show_opportunities(data):
 
         except Exception as e:
             st.error(f"Erro ao gerar análise de VIPs: {str(e)}")
+
+
+def show_advanced_analytics(data):
+    """Página de Análises Avançadas com 6 ferramentas profissionais"""
+
+    st.header("🚀 Ferramentas Pro - Análises Avançadas")
+
+    st.info("""
+    **Ferramentas profissionais para otimizar cada aspecto do seu negócio!**
+
+    Esta seção oferece 6 análises avançadas:
+    - **💰 Rentabilidade:** Identifique produtos mais lucrativos
+    - **🛒 Cross-Selling:** Descubra produtos comprados juntos
+    - **🔄 Jornada do Cliente:** Primeiro vs Recorrente
+    - **🎯 Metas e KPIs:** Acompanhe performance vs objetivos
+    - **🗺️ Análise Geográfica:** Oportunidades por região
+    - **📞 Reativação:** Resgate clientes inativos
+    """)
+
+    # Importar os analisadores
+    try:
+        import sys
+        from pathlib import Path
+        sys.path.append(str(Path(__file__).parent / 'src'))
+        from visualization.business_analytics import (
+            ProfitabilityAnalyzer, BasketAnalyzer, CustomerJourneyAnalyzer,
+            GoalTracker, GeographicAnalyzer, ReactivationAnalyzer
+        )
+    except ImportError as e:
+        st.error(f"Erro ao carregar módulo de análises avançadas: {e}")
+        return
+
+    # Criar tabs para as 6 análises
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "💰 Rentabilidade",
+        "🛒 Cross-Selling",
+        "🔄 Jornada Cliente",
+        "🎯 Metas & KPIs",
+        "🗺️ Geografia",
+        "📞 Reativação"
+    ])
+
+    with tab1:
+        st.subheader("💰 Análise de Margem e Rentabilidade")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Produtos com melhor margem de lucro
+        - Classificação BCG: Estrela, Vaca Leiteira, Oportunidade, Peso Morto
+        - Produtos com margem baixa que precisam de ação
+        - Lucro total estimado por produto
+        """)
+
+        try:
+            profit_analyzer = ProfitabilityAnalyzer(data)
+
+            # Resumo de rentabilidade
+            summary = profit_analyzer.profitability_summary()
+
+            if summary:
+                st.markdown("#### 📊 Resumo Geral de Rentabilidade")
+
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        "Receita Total",
+                        f"R$ {summary.get('receita_total', 0):,.2f}"
+                    )
+
+                with col2:
+                    st.metric(
+                        "Lucro Estimado",
+                        f"R$ {summary.get('lucro_total_estimado', 0):,.2f}",
+                        f"{summary.get('margem_media', 0):.1f}% margem média"
+                    )
+
+                with col3:
+                    st.metric(
+                        "🌟 Produtos Estrela",
+                        summary.get('num_estrelas', 0),
+                        "alta receita + alta margem"
+                    )
+
+                with col4:
+                    st.metric(
+                        "⚠️ Peso Morto",
+                        summary.get('num_peso_morto', 0),
+                        "baixa receita + baixa margem"
+                    )
+
+                st.info(f"""
+                **💡 Nota sobre margem:**
+                Como não há dados de custo no sistema, estamos estimando uma margem conservadora de 35% (padrão do mercado de vinhos).
+                Para análises mais precisas, adicione uma coluna de custo ao dataset.
+                """)
+
+            # Análise de margem por produto
+            st.markdown("#### 💎 Matriz BCG - Classificação de Produtos")
+
+            margins = profit_analyzer.calculate_profit_margins()
+
+            if not margins.empty:
+                # Gráfico de dispersão BCG
+                fig = px.scatter(
+                    margins,
+                    x='receita_total',
+                    y='margem_percentual',
+                    size='lucro_total',
+                    color='classificacao',
+                    hover_data=['produto_id'] if 'nome' not in margins.columns else ['nome'],
+                    title='Matriz BCG - Receita vs Margem',
+                    labels={
+                        'receita_total': 'Receita Total (R$)',
+                        'margem_percentual': 'Margem (%)',
+                        'classificacao': 'Classificação'
+                    },
+                    color_discrete_map={
+                        'Estrela (Alta Receita + Alta Margem)': '#28a745',
+                        'Vaca Leiteira (Alta Receita + Baixa Margem)': '#ffc107',
+                        'Oportunidade (Baixa Receita + Alta Margem)': '#17a2b8',
+                        'Peso Morto (Baixa Receita + Baixa Margem)': '#dc3545'
+                    }
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Tabela detalhada
+                st.markdown("#### 📋 Detalhamento por Produto")
+
+                display_cols = ['produto_id', 'receita_total', 'margem_percentual', 'lucro_total', 'classificacao']
+                if 'nome' in margins.columns:
+                    display_cols.insert(1, 'nome')
+
+                st.dataframe(
+                    margins[display_cols].head(20).rename(columns={
+                        'produto_id': 'ID',
+                        'nome': 'Produto',
+                        'receita_total': 'Receita (R$)',
+                        'margem_percentual': 'Margem (%)',
+                        'lucro_total': 'Lucro Estimado (R$)',
+                        'classificacao': 'Classificação BCG'
+                    }),
+                    use_container_width=True
+                )
+
+                # Produtos com margem baixa
+                st.markdown("#### ⚠️ Produtos com Margem Baixa (<25%)")
+
+                low_margin = profit_analyzer.identify_low_margin_products(threshold=25)
+
+                if not low_margin.empty:
+                    st.warning(f"""
+                    **ALERTA: {len(low_margin)} produtos com margem abaixo de 25%!**
+
+                    Esses produtos estão comprometendo sua rentabilidade.
+                    """)
+
+                    display_cols_low = ['produto_id', 'margem_percentual', 'receita_total', 'acao_recomendada']
+                    if 'nome' in low_margin.columns:
+                        display_cols_low.insert(1, 'nome')
+
+                    st.dataframe(
+                        low_margin[display_cols_low].head(15),
+                        use_container_width=True
+                    )
+
+                    st.error("""
+                    **📋 Plano de Ação:**
+
+                    **Curto Prazo (1-2 semanas):**
+                    1. Renegociar preços com fornecedores dos produtos de margem <20%
+                    2. Aumentar preços gradualmente (2-5%) nos produtos de margem 20-25%
+                    3. Criar combos misturando baixa margem com alta margem
+
+                    **Médio Prazo (1 mês):**
+                    1. Avaliar descontinuar produtos de margem <15% e baixa receita
+                    2. Substituir por produtos similares com melhor margem
+                    3. Focar marketing nos produtos "Estrela"
+
+                    **Meta:** Margem média acima de 35% em 3 meses
+                    """)
+                else:
+                    st.success("✅ Excelente! Todos os produtos têm margem saudável (≥25%)")
+
+            else:
+                st.info("Não há dados suficientes para análise de rentabilidade.")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de rentabilidade: {str(e)}")
+
+    with tab2:
+        st.subheader("🛒 Cross-Selling e Análise de Cesta")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Produtos frequentemente comprados juntos
+        - Sugestões de combos/kits
+        - Métricas da cesta de compras
+        - Oportunidades de aumentar ticket médio
+        """)
+
+        try:
+            basket_analyzer = BasketAnalyzer(data)
+
+            # Métricas gerais da cesta
+            st.markdown("#### 📊 Métricas da Cesta de Compras")
+
+            basket_metrics = basket_analyzer.calculate_basket_metrics()
+
+            if basket_metrics:
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric(
+                        "Produtos/Compra",
+                        f"{basket_metrics.get('produtos_por_compra_medio', 0):.1f}",
+                        f"máx: {basket_metrics.get('produtos_por_compra_max', 0)}"
+                    )
+
+                with col2:
+                    st.metric(
+                        "Compras Múltiplas",
+                        f"{basket_metrics.get('percent_compras_multiplas', 0):.1f}%",
+                        f"{basket_metrics.get('compras_multiplas', 0)} compras"
+                    )
+
+                with col3:
+                    if 'valor_cesta_medio' in basket_metrics:
+                        st.metric(
+                            "Valor Médio Cesta",
+                            f"R$ {basket_metrics.get('valor_cesta_medio', 0):.2f}",
+                            f"máx: R$ {basket_metrics.get('valor_cesta_max', 0):.2f}"
+                        )
+
+                # Insight sobre oportunidade
+                if basket_metrics.get('percent_compras_multiplas', 0) < 30:
+                    st.warning(f"""
+                    **⚠️ OPORTUNIDADE IDENTIFICADA!**
+
+                    Apenas {basket_metrics.get('percent_compras_multiplas', 0):.1f}% das compras têm múltiplos produtos.
+
+                    **Como aumentar:**
+                    - Criar combos com desconto
+                    - Sugerir produtos relacionados no checkout
+                    - Oferecer frete grátis acima de X produtos
+                    - Implementar "Compre 2, Leve 3"
+                    """)
+                else:
+                    st.success(f"""
+                    ✅ Ótimo! {basket_metrics.get('percent_compras_multiplas', 0):.1f}% das compras têm múltiplos produtos.
+                    Continue incentivando cross-selling!
+                    """)
+
+            # Produtos comprados juntos
+            st.markdown("#### 🔗 Produtos Frequentemente Comprados Juntos")
+
+            associations = basket_analyzer.find_product_associations(min_support=2)
+
+            if not associations.empty:
+                st.markdown(f"**Encontramos {len(associations)} combinações de produtos!**")
+
+                # Mostrar top 15 associações
+                display_cols = ['produto_1', 'produto_2', 'frequencia', 'confianca_1_2']
+
+                if 'nome_produto_1' in associations.columns:
+                    display_cols = ['nome_produto_1', 'nome_produto_2', 'frequencia', 'confianca_1_2']
+
+                st.dataframe(
+                    associations.head(15)[display_cols].rename(columns={
+                        'produto_1': 'Produto 1',
+                        'produto_2': 'Produto 2',
+                        'nome_produto_1': 'Produto 1',
+                        'nome_produto_2': 'Produto 2',
+                        'frequencia': 'Vezes Comprados Juntos',
+                        'confianca_1_2': 'Confiança (%)'
+                    }),
+                    use_container_width=True
+                )
+
+                st.info("""
+                **Como ler:**
+                - **Frequência:** Quantas vezes os produtos foram comprados juntos
+                - **Confiança:** % das vezes que Produto 2 é comprado quando Produto 1 é comprado
+                - **Alta confiança (>50%):** Associação muito forte - crie combo!
+                """)
+
+            else:
+                st.info("Poucas compras com múltiplos produtos. Incentive cross-selling!")
+
+            # Sugestões de combos
+            st.markdown("#### 🎁 Sugestões de Combos/Kits")
+
+            bundles = basket_analyzer.suggest_bundles(min_freq=2)
+
+            if not bundles.empty:
+                st.success(f"**Identificamos {len(bundles)} oportunidades de combos!**")
+
+                display_cols_bundle = ['produto_1', 'produto_2', 'frequencia', 'desconto_sugerido', 'tipo_bundle']
+
+                if 'nome_produto_1' in bundles.columns:
+                    display_cols_bundle = ['nome_produto_1', 'nome_produto_2', 'frequencia', 'desconto_sugerido', 'tipo_bundle']
+
+                st.dataframe(
+                    bundles[display_cols_bundle].rename(columns={
+                        'produto_1': 'Produto 1',
+                        'produto_2': 'Produto 2',
+                        'nome_produto_1': 'Produto 1',
+                        'nome_produto_2': 'Produto 2',
+                        'frequencia': 'Força da Associação',
+                        'desconto_sugerido': 'Desconto Sugerido',
+                        'tipo_bundle': 'Tipo de Combo'
+                    }),
+                    use_container_width=True
+                )
+
+                st.success("""
+                **💡 Como Implementar Combos:**
+
+                **Exemplo de Campanha:**
+                1. Nome: "Harmonização Perfeita"
+                2. Oferta: "Compre [Produto 1] + [Produto 2] com 10% OFF!"
+                3. Destaque: "Clientes que compraram isso também levaram..."
+                4. Prazo: Oferta válida por 7 dias
+                5. Canal: Email + Banner no site
+
+                **Precificação:**
+                - Desconto de 10-15% no combo
+                - Ainda mantém margem saudável
+                - Aumenta ticket médio significativamente
+
+                **Métricas a acompanhar:**
+                - Taxa de conversão do combo
+                - Aumento no ticket médio
+                - ROI da campanha
+                """)
+
+                # Download
+                csv = bundles.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label='📥 Baixar sugestões de combos (CSV)',
+                    data=csv,
+                    file_name='sugestoes_combos.csv',
+                    mime='text/csv'
+                )
+
+            else:
+                st.info("Não há associações fortes o suficiente para sugerir combos ainda.")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de cross-selling: {str(e)}")
+
+    with tab3:
+        st.subheader("🔄 Jornada do Cliente - Primeira vs Compras Recorrentes")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Taxa de conversão (primeira → segunda compra)
+        - Tempo médio até segunda compra
+        - Produtos que convertem melhor novos clientes
+        - Estratégias para aumentar retenção
+        """)
+
+        try:
+            journey_analyzer = CustomerJourneyAnalyzer(data)
+
+            # Taxa de conversão
+            st.markdown("#### 📈 Taxa de Conversão e Retenção")
+
+            conversion = journey_analyzer.calculate_conversion_rate()
+
+            if conversion:
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        "Total Clientes",
+                        conversion.get('total_clientes', 0)
+                    )
+
+                with col2:
+                    st.metric(
+                        "Clientes Recorrentes",
+                        conversion.get('clientes_recorrentes', 0),
+                        f"{conversion.get('taxa_conversao', 0):.1f}% converteram"
+                    )
+
+                with col3:
+                    st.metric(
+                        "Taxa de Conversão",
+                        f"{conversion.get('taxa_conversao', 0):.1f}%"
+                    )
+
+                with col4:
+                    st.metric(
+                        "Tempo Médio 2ª Compra",
+                        f"{conversion.get('dias_medio_ate_segunda_compra', 0):.0f} dias"
+                    )
+
+                # Análise da taxa
+                taxa = conversion.get('taxa_conversao', 0)
+
+                if taxa < 30:
+                    st.error(f"""
+                    **🚨 TAXA DE CONVERSÃO BAIXA ({taxa:.1f}%)!**
+
+                    Você está perdendo {conversion.get('clientes_one_time', 0)} clientes após a primeira compra!
+
+                    **Ações Urgentes:**
+
+                    **1. Email de Boas-Vindas (Enviar em 24h após 1ª compra):**
+                    - Agradecer a compra
+                    - Cupom de 10% para próxima compra (válido 30 dias)
+                    - Sugerir produtos complementares
+
+                    **2. Acompanhamento em 7 Dias:**
+                    - "Como está gostando do [produto]?"
+                    - Pedir feedback/avaliação
+                    - Oferecer ajuda
+
+                    **3. Lembrete em {int(conversion.get('dias_medio_ate_segunda_compra', 30))} dias:**
+                    - "Hora de reabastecer!"
+                    - Desconto especial para clientes
+                    - Frete grátis na 2ª compra
+
+                    **Meta:** Aumentar taxa para 50% em 3 meses
+                    """)
+                elif taxa < 50:
+                    st.warning(f"""
+                    **⚠️ Taxa de conversão razoável ({taxa:.1f}%), mas pode melhorar!**
+
+                    Continue investindo em:
+                    - Programa de fidelidade
+                    - Email marketing pós-compra
+                    - Experiência do cliente de primeira compra
+                    """)
+                else:
+                    st.success(f"""
+                    **✅ Excelente taxa de conversão ({taxa:.1f}%)!**
+
+                    Você está fazendo um ótimo trabalho retendo clientes.
+                    Continue focando na experiência do cliente!
+                    """)
+
+            # Produtos que convertem melhor
+            st.markdown("#### 🏆 Produtos que Melhor Convertem Novos Clientes")
+
+            first_purchase_products = journey_analyzer.analyze_first_purchase_products()
+
+            if not first_purchase_products.empty:
+                st.markdown("**Produtos de entrada ideais para atrair e reter clientes:**")
+
+                display_cols = ['produto_id', 'clientes_primeira_compra', 'clientes_retornaram', 'taxa_retencao']
+
+                if 'nome' in first_purchase_products.columns:
+                    display_cols.insert(1, 'nome')
+
+                st.dataframe(
+                    first_purchase_products.head(15)[display_cols].rename(columns={
+                        'produto_id': 'ID',
+                        'nome': 'Produto',
+                        'clientes_primeira_compra': 'Clientes 1ª Compra',
+                        'clientes_retornaram': 'Retornaram',
+                        'taxa_retencao': 'Taxa Retenção (%)'
+                    }),
+                    use_container_width=True
+                )
+
+                # Identificar melhor produto de entrada
+                best_product = first_purchase_products.iloc[0]
+
+                st.success(f"""
+                **🌟 Produto Campeão de Conversão:**
+
+                **Produto:** {best_product.get('nome', best_product['produto_id'])}
+                **Taxa de Retenção:** {best_product['taxa_retencao']:.1f}%
+
+                **Estratégia Recomendada:**
+                1. Use este produto em campanhas de aquisição de novos clientes
+                2. Ofereça como "produto de entrada" com desconto especial
+                3. Destaque nos anúncios e landing pages
+                4. Combine com programa "primeira compra com desconto"
+
+                **Por que funciona:**
+                Este produto tem a melhor taxa de converter novos clientes em recorrentes!
+                """)
+
+            else:
+                st.info("Dados insuficientes para análise de primeira compra.")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de jornada: {str(e)}")
+
+    with tab4:
+        st.subheader("🎯 Dashboard de Metas e KPIs")
+
+        st.markdown("""
+        **O que você vai acompanhar:**
+        - Progresso vs meta mensal
+        - KPIs principais do negócio
+        - Comparação período a período
+        - Projeção de atingimento
+        """)
+
+        try:
+            goal_tracker = GoalTracker(data)
+
+            # Definir meta
+            st.markdown("#### 🎯 Configure Sua Meta Mensal")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                target_revenue = st.number_input(
+                    "Meta de Receita (R$)",
+                    min_value=0.0,
+                    value=50000.0,
+                    step=5000.0
+                )
+
+            with col2:
+                target_customers = st.number_input(
+                    "Meta de Clientes",
+                    min_value=0,
+                    value=100,
+                    step=10
+                )
+
+            # Acompanhar meta
+            goal_status = goal_tracker.set_monthly_goal(target_revenue, target_customers)
+
+            if goal_status:
+                st.markdown("#### 📊 Status da Meta do Mês")
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric(
+                        "Receita Atual",
+                        f"R$ {goal_status.get('receita_atual', 0):,.2f}",
+                        f"{goal_status.get('progresso_receita', 0):.1f}% da meta"
+                    )
+
+                with col2:
+                    st.metric(
+                        "Projeção Fim Mês",
+                        f"R$ {goal_status.get('projecao_fim_mes', 0):,.2f}",
+                        "✅ Bate meta!" if goal_status.get('vai_bater_meta') else "⚠️ Abaixo da meta"
+                    )
+
+                with col3:
+                    st.metric(
+                        "Dias Restantes",
+                        goal_status.get('dias_restantes', 0),
+                        "dias para atingir meta"
+                    )
+
+                # Gráfico de progresso
+                progress = goal_status.get('progresso_receita', 0) / 100
+                fig = go.Figure(go.Indicator(
+                    mode="gauge+number+delta",
+                    value=goal_status.get('receita_atual', 0),
+                    domain={'x': [0, 1], 'y': [0, 1]},
+                    title={'text': "Progresso da Meta de Receita"},
+                    delta={'reference': target_revenue},
+                    gauge={
+                        'axis': {'range': [None, target_revenue]},
+                        'bar': {'color': "#28a745" if goal_status.get('vai_bater_meta') else "#ffc107"},
+                        'steps': [
+                            {'range': [0, target_revenue * 0.5], 'color': "#ffebee"},
+                            {'range': [target_revenue * 0.5, target_revenue * 0.75], 'color': "#fff3cd"},
+                            {'range': [target_revenue * 0.75, target_revenue], 'color': "#d4edda"}
+                        ],
+                        'threshold': {
+                            'line': {'color': "red", 'width': 4},
+                            'thickness': 0.75,
+                            'value': target_revenue
+                        }
+                    }
+                ))
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Recomendações
+                if not goal_status.get('vai_bater_meta'):
+                    gap = target_revenue - goal_status.get('projecao_fim_mes', 0)
+                    days_left = goal_status.get('dias_restantes', 1)
+                    daily_needed = gap / days_left if days_left > 0 else gap
+
+                    st.warning(f"""
+                    **⚠️ Meta em Risco! Faltam R$ {gap:,.2f}**
+
+                    **Plano de Recuperação:**
+
+                    **1. Ação Imediata (Hoje):**
+                    - Disparar campanha para clientes VIP inativos
+                    - Email com oferta relâmpago 24h
+                    - Desconto de 15% + Frete Grátis
+
+                    **2. Próximos {days_left} dias:**
+                    - Vender R$ {daily_needed:,.2f} por dia (média necessária)
+                    - Promoção de combos/kits
+                    - Ativar programa de indicação (indique e ganhe)
+
+                    **3. Focar em:**
+                    - Produtos de alto ticket médio
+                    - Clientes de maior valor histórico
+                    - Cross-selling agressivo
+
+                    **Meta ajustada:** R$ {daily_needed:,.2f}/dia pelos próximos {days_left} dias
+                    """)
+                else:
+                    st.success("""
+                    **✅ Parabéns! Você está no caminho para bater a meta!**
+
+                    Continue com o ritmo atual e você atingirá o objetivo.
+                    """)
+
+            # KPIs Gerais
+            st.markdown("#### 📊 KPIs Principais")
+
+            kpis = goal_tracker.calculate_kpis()
+
+            if kpis:
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric("Receita Total", f"R$ {kpis.get('receita_total', 0):,.2f}")
+                    st.metric("Ticket Médio", f"R$ {kpis.get('ticket_medio', 0):.2f}")
+
+                with col2:
+                    st.metric("Total Clientes", kpis.get('total_clientes', 0))
+                    st.metric("Total Transações", kpis.get('total_transacoes', 0))
+
+                with col3:
+                    st.metric("Transações/Cliente", f"{kpis.get('transacoes_por_cliente', 0):.1f}")
+                    st.metric("Produtos Únicos", kpis.get('produtos_unicos_vendidos', 0))
+
+                with col4:
+                    st.metric("Unidades Vendidas", kpis.get('unidades_vendidas', 0))
+                    if 'taxa_churn' in kpis:
+                        st.metric("Taxa Churn", f"{kpis.get('taxa_churn', 0):.1f}%")
+
+            # Comparação de períodos
+            st.markdown("#### 📅 Comparação Período a Período")
+
+            period_type = st.selectbox(
+                "Selecione o período de comparação:",
+                ['month', 'quarter', 'year'],
+                format_func=lambda x: {'month': 'Mês a Mês', 'quarter': 'Trimestre a Trimestre', 'year': 'Ano a Ano'}[x]
+            )
+
+            comparison = goal_tracker.compare_periods(period=period_type)
+
+            if not comparison.empty:
+                # Gráfico de evolução
+                fig = go.Figure()
+
+                fig.add_trace(go.Bar(
+                    x=comparison['periodo'],
+                    y=comparison['receita_total'],
+                    name='Receita',
+                    marker_color='#722F37'
+                ))
+
+                fig.update_layout(
+                    title='Evolução da Receita por Período',
+                    xaxis_title='Período',
+                    yaxis_title='Receita (R$)',
+                    template='plotly_white'
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Tabela de comparação
+                st.dataframe(
+                    comparison.rename(columns={
+                        'periodo': 'Período',
+                        'receita_total': 'Receita (R$)',
+                        'ticket_medio': 'Ticket Médio (R$)',
+                        'num_vendas': 'Num. Vendas',
+                        'clientes_unicos': 'Clientes Únicos',
+                        'var_receita': 'Variação Receita (%)',
+                        'var_clientes': 'Variação Clientes (%)'
+                    }),
+                    use_container_width=True
+                )
+
+        except Exception as e:
+            st.error(f"Erro ao gerar dashboard de metas: {str(e)}")
+
+    with tab5:
+        st.subheader("🗺️ Análise Geográfica Avançada")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Performance detalhada por cidade
+        - Oportunidades de expansão geográfica
+        - Concentração de mercado
+        - Cidades com alto potencial inexplorado
+        """)
+
+        try:
+            geo_analyzer = GeographicAnalyzer(data)
+
+            # Resumo geográfico
+            summary = geo_analyzer.geographic_summary()
+
+            if summary:
+                st.markdown("#### 🌍 Resumo Geográfico")
+
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        "Cidades Atendidas",
+                        summary.get('num_cidades', 0)
+                    )
+
+                with col2:
+                    st.metric(
+                        "Cidade Top",
+                        summary.get('cidade_top', 'N/A'),
+                        f"R$ {summary.get('receita_cidade_top', 0):,.2f}"
+                    )
+
+                with col3:
+                    st.metric(
+                        "Concentração Top 5",
+                        f"{summary.get('concentracao_top_5', 0):.1f}%",
+                        "da receita"
+                    )
+
+                with col4:
+                    st.metric(
+                        "Mercados Consolidados",
+                        summary.get('mercados_consolidados', 0),
+                        f"{summary.get('oportunidades_expansao', 0)} oportunidades"
+                    )
+
+            # Performance por cidade
+            st.markdown("#### 📊 Performance Detalhada por Cidade")
+
+            city_perf = geo_analyzer.city_performance()
+
+            if not city_perf.empty:
+                # Gráfico de barras
+                fig = px.bar(
+                    city_perf.head(15),
+                    x='cidade',
+                    y='receita_total',
+                    color='classificacao',
+                    title='Top 15 Cidades por Receita',
+                    labels={'cidade': 'Cidade', 'receita_total': 'Receita (R$)'},
+                    color_discrete_map={
+                        'Mercado Consolidado': '#28a745',
+                        'Mercado em Crescimento': '#ffc107',
+                        'Mercado Potencial': '#17a2b8'
+                    }
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Tabela detalhada
+                st.dataframe(
+                    city_perf.rename(columns={
+                        'cidade': 'Cidade',
+                        'receita_total': 'Receita (R$)',
+                        'ticket_medio': 'Ticket Médio (R$)',
+                        'num_vendas': 'Num. Vendas',
+                        'clientes_unicos': 'Clientes',
+                        'unidades_vendidas': 'Unidades',
+                        'participacao_receita': 'Participação (%)',
+                        'classificacao': 'Status'
+                    }),
+                    use_container_width=True
+                )
+
+            # Oportunidades de expansão
+            st.markdown("#### 🚀 Oportunidades de Expansão")
+
+            opportunities = geo_analyzer.identify_expansion_opportunities()
+
+            if not opportunities.empty:
+                st.success(f"""
+                **Identificamos {len(opportunities)} cidades com alto potencial!**
+
+                Essas cidades têm poucos clientes mas um ticket médio alto - sinal de que há demanda qualificada!
+                """)
+
+                st.dataframe(
+                    opportunities[['cidade', 'clientes_unicos', 'ticket_medio', 'receita_total', 'potencial', 'acao_recomendada']].rename(columns={
+                        'cidade': 'Cidade',
+                        'clientes_unicos': 'Clientes Atuais',
+                        'ticket_medio': 'Ticket Médio (R$)',
+                        'receita_total': 'Receita Atual (R$)',
+                        'potencial': 'Potencial',
+                        'acao_recomendada': 'Ação Recomendada'
+                    }),
+                    use_container_width=True
+                )
+
+                st.info("""
+                **📋 Plano de Expansão Geográfica (6 Meses):**
+
+                **Fase 1 - Meses 1-2: Teste de Mercado**
+                - Selecionar top 3 cidades oportunidade
+                - Campanha de marketing local (Google Ads + Facebook geolocalizadas)
+                - Budget: R$ 500-1000 por cidade
+                - Oferta especial: "Chegamos em [Cidade]! 15% OFF"
+
+                **Fase 2 - Meses 3-4: Consolidação**
+                - Avaliar ROI das campanhas
+                - Expandir investimento nas cidades com melhor resposta
+                - Criar parcerias locais (restaurantes, eventos)
+                - Implementar programa de indicação local
+
+                **Fase 3 - Meses 5-6: Escala**
+                - Aumentar penetração nas cidades bem-sucedidas
+                - Replicar estratégia em novas cidades
+                - Eventos de degustação locais
+                - Criar "embaixadores" em cada cidade
+
+                **Meta:** Dobrar número de cidades consolidadas em 6 meses
+                """)
+
+            else:
+                st.info("""
+                Não há oportunidades claras de expansão no momento.
+                Foque em consolidar mercados existentes.
+                """)
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise geográfica: {str(e)}")
+
+    with tab6:
+        st.subheader("📞 Análise de Reativação de Clientes")
+
+        st.markdown("""
+        **O que você vai descobrir:**
+        - Clientes inativos há 30/60/90 dias
+        - Priorização por valor histórico
+        - Ofertas personalizadas de reativação
+        - Campanha pronta para execução
+        """)
+
+        try:
+            reactivation_analyzer = ReactivationAnalyzer(data)
+
+            # Métricas de reativação
+            st.markdown("#### 📊 Métricas de Inatividade")
+
+            metrics = reactivation_analyzer.calculate_reactivation_metrics()
+
+            if metrics:
+                col1, col2, col3, col4 = st.columns(4)
+
+                with col1:
+                    st.metric(
+                        "Inativos 30d",
+                        metrics.get('clientes_inativos_30d', 0)
+                    )
+
+                with col2:
+                    st.metric(
+                        "Inativos 60d",
+                        metrics.get('clientes_inativos_60d', 0),
+                        f"{metrics.get('taxa_inatividade_60d', 0):.1f}% do total"
+                    )
+
+                with col3:
+                    st.metric(
+                        "Inativos 90d",
+                        metrics.get('clientes_inativos_90d', 0),
+                        "CRÍTICO"
+                    )
+
+                with col4:
+                    st.metric(
+                        "Receita em Risco",
+                        f"R$ {metrics.get('receita_em_risco_60d', 0):,.2f}",
+                        f"{metrics.get('clientes_alta_prioridade', 0)} VIPs"
+                    )
+
+                # Alerta
+                if metrics.get('clientes_inativos_60d', 0) > 20:
+                    st.error(f"""
+                    **🚨 ALERTA: {metrics.get('clientes_inativos_60d', 0)} clientes inativos há 60+ dias!**
+
+                    Você está em risco de perder R$ {metrics.get('receita_em_risco_60d', 0):,.2f} em receita histórica!
+                    """)
+
+            # Lista de clientes inativos
+            st.markdown("#### 📋 Clientes Inativos para Reativação")
+
+            days_filter = st.slider(
+                "Filtrar por dias de inatividade:",
+                min_value=30,
+                max_value=180,
+                value=60,
+                step=30
+            )
+
+            inactive = reactivation_analyzer.identify_inactive_customers(days_threshold=days_filter)
+
+            if not inactive.empty:
+                st.warning(f"""
+                **Encontramos {len(inactive)} clientes inativos há {days_filter}+ dias**
+
+                **Classificação:**
+                - **Alta Prioridade:** Clientes que gastaram muito - ligue pessoalmente!
+                - **Média Prioridade:** Envie email personalizado
+                - **Baixa Prioridade:** Email genérico de campanha
+                """)
+
+                # Filtro de prioridade
+                priority_filter = st.multiselect(
+                    "Filtrar por prioridade:",
+                    ['Alta', 'Média', 'Baixa'],
+                    default=['Alta', 'Média', 'Baixa']
+                )
+
+                filtered_inactive = inactive[inactive['prioridade'].isin(priority_filter)]
+
+                display_cols = ['cliente_id', 'dias_inativo', 'receita_total', 'risco', 'prioridade', 'oferta_sugerida']
+
+                if 'nome' in filtered_inactive.columns:
+                    display_cols.insert(1, 'nome')
+
+                st.dataframe(
+                    filtered_inactive[display_cols].rename(columns={
+                        'cliente_id': 'Cliente ID',
+                        'nome': 'Nome',
+                        'dias_inativo': 'Dias Inativo',
+                        'receita_total': 'Receita Histórica (R$)',
+                        'risco': 'Risco',
+                        'prioridade': 'Prioridade',
+                        'oferta_sugerida': 'Oferta Sugerida'
+                    }),
+                    use_container_width=True
+                )
+
+                # Criar campanha
+                st.markdown("#### 🎯 Campanha de Reativação Pronta")
+
+                num_clientes_campanha = st.slider(
+                    "Quantos clientes incluir na campanha?",
+                    min_value=10,
+                    max_value=min(200, len(inactive)),
+                    value=min(50, len(inactive)),
+                    step=10
+                )
+
+                campaign = reactivation_analyzer.create_reactivation_campaign(
+                    days_threshold=days_filter,
+                    max_customers=num_clientes_campanha
+                )
+
+                if not campaign.empty:
+                    st.success(f"""
+                    **✅ Campanha criada com {len(campaign)} clientes!**
+
+                    **Cronograma de Execução:**
+                    """)
+
+                    alta_prioridade = len(campaign[campaign['prioridade'] == 'Alta']) if 'prioridade' in campaign.columns else 0
+                    media_prioridade = len(campaign[campaign['prioridade'] == 'Média']) if 'prioridade' in campaign.columns else 0
+
+                    st.markdown(f"""
+                    **Dia 1 (Hoje):**
+                    - 📞 Ligar para {alta_prioridade} clientes de alta prioridade
+                    - Script: "Olá [Nome], sentimos sua falta! Temos uma oferta especial para você..."
+
+                    **Dia 2:**
+                    - 📧 Enviar email personalizado para {media_prioridade} clientes média prioridade
+                    - Assunto: "[Nome], preparamos uma surpresa para você!"
+                    - Incluir histórico de compras e sugestões personalizadas
+
+                    **Dia 3-4:**
+                    - 📱 WhatsApp/SMS para clientes que não abriram email
+                    - Mensagem curta com link direto para oferta
+
+                    **Dia 5-7:**
+                    - 🔔 Lembrete de expiração da oferta
+                    - "Última chance! Sua oferta expira em 48h"
+                    - Criar urgência
+
+                    **Meta:** Reativar {int(len(campaign) * 0.3)} clientes (30% da campanha)
+                    """)
+
+                    # Prévia da tabela
+                    st.dataframe(campaign.head(20), use_container_width=True)
+
+                    # Download
+                    csv = campaign.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label='📥 Baixar lista completa da campanha (CSV)',
+                        data=csv,
+                        file_name=f'campanha_reativacao_{days_filter}d.csv',
+                        mime='text/csv'
+                    )
+
+                    st.info("""
+                    **💡 Dicas para Aumentar Taxa de Reativação:**
+
+                    **1. Personalização é Tudo:**
+                    - Use o nome do cliente
+                    - Mencione produtos que ele comprou antes
+                    - Seja específico sobre quanto tempo sem comprar
+
+                    **2. Oferta Irresistível:**
+                    - Desconto significativo (20-30%)
+                    - Frete grátis
+                    - Brinde na primeira compra de volta
+                    - Prazo limitado (cria urgência)
+
+                    **3. Múltiplos Canais:**
+                    - Email + SMS + WhatsApp
+                    - Retargeting em redes sociais
+                    - Não desista no primeiro contato
+
+                    **4. Teste e Aprenda:**
+                    - A/B test em assuntos de email
+                    - Testar diferentes ofertas
+                    - Acompanhar taxa de abertura e conversão
+                    - Ajustar estratégia com base nos resultados
+                    """)
+
+            else:
+                st.success("✅ Parabéns! Nenhum cliente inativo neste período!")
+
+        except Exception as e:
+            st.error(f"Erro ao gerar análise de reativação: {str(e)}")
 
 
 def show_help():
