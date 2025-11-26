@@ -129,8 +129,8 @@ class InventoryManager:
 
         df = self.data.dropna(subset=['data_compra'])
 
-        # Data de referência (última venda no dataset)
-        ref_date = df['data_compra'].max()
+        # Data de referência (data atual)
+        ref_date = pd.Timestamp.now()
 
         # Última venda de cada produto
         last_sale = df.groupby('produto_id')['data_compra'].max().reset_index()
@@ -143,8 +143,16 @@ class InventoryManager:
         slow_products = last_sale[last_sale['dias_parado'] >= self.dias_estoque_parado].copy()
 
         # Adicionar informações do produto
-        if 'nome' in self.data.columns:
-            product_info = self.data.groupby('produto_id')['nome'].first().reset_index()
+        # Procurar pela coluna correta de nome do produto
+        nome_col = None
+        for col in ['nome_produto', 'nome']:
+            if col in self.data.columns:
+                nome_col = col
+                break
+
+        if nome_col:
+            product_info = self.data.groupby('produto_id')[nome_col].first().reset_index()
+            product_info.columns = ['produto_id', 'nome']
             slow_products = slow_products.merge(product_info, on='produto_id', how='left')
 
         # Calcular receita perdida (média de vendas * dias parado)
@@ -188,8 +196,16 @@ class InventoryManager:
         total_sold['classificacao'] = total_sold['giro_mensal'].apply(classify_turnover)
 
         # Adicionar nome do produto se disponível
-        if 'nome' in self.data.columns:
-            product_info = self.data.groupby('produto_id')['nome'].first().reset_index()
+        # Procurar pela coluna correta de nome do produto
+        nome_col = None
+        for col in ['nome_produto', 'nome']:
+            if col in self.data.columns:
+                nome_col = col
+                break
+
+        if nome_col:
+            product_info = self.data.groupby('produto_id')[nome_col].first().reset_index()
+            product_info.columns = ['produto_id', 'nome']
             total_sold = total_sold.merge(product_info, on='produto_id', how='left')
 
         return total_sold.sort_values('giro_mensal', ascending=False)
